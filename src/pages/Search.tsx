@@ -60,7 +60,10 @@ const Search = () => {
         `);
 
       if (searchTerm) {
-        query = query.or(`exams.name.ilike.%${searchTerm}%,exams.description.ilike.%${searchTerm}%`);
+        query = query.or([
+          `exams.name.ilike.%${searchTerm}%`,
+          `exams.description.ilike.%${searchTerm}%`
+        ].join(','));
       }
 
       if (selectedType) {
