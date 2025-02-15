@@ -16,10 +16,12 @@ import { Card } from "@/components/ui/card";
 import NavBar from "@/components/NavBar";
 import { supabase } from "@/integrations/supabase/client";
 
+type ExamType = "blood_test" | "x_ray" | "mri" | "ct_scan" | "ultrasound" | "endoscopy" | "colonoscopy" | "mammogram" | "other";
+
 type ExamResult = {
   exam_id: string;
   exam_name: string;
-  exam_type: string;
+  exam_type: ExamType;
   exam_description: string;
   exam_price: number;
   laboratory_id: string;
@@ -31,8 +33,8 @@ type ExamResult = {
 
 const Search = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState<string>("");
-  const [selectedCity, setSelectedCity] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<ExamType | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
   const { data: examResults = [], isLoading } = useQuery({
     queryKey: ["exams", searchTerm, selectedType, selectedCity],
@@ -125,12 +127,14 @@ const Search = () => {
             </div>
             <div>
               <Label htmlFor="type">Exam Type</Label>
-              <Select value={selectedType} onValueChange={setSelectedType}>
+              <Select
+                value={selectedType || undefined}
+                onValueChange={(value: ExamType) => setSelectedType(value)}
+              >
                 <SelectTrigger id="type">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
                   <SelectItem value="blood_test">Blood Test</SelectItem>
                   <SelectItem value="x_ray">X-Ray</SelectItem>
                   <SelectItem value="mri">MRI</SelectItem>
@@ -145,12 +149,14 @@ const Search = () => {
             </div>
             <div>
               <Label htmlFor="city">City</Label>
-              <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <Select
+                value={selectedCity || undefined}
+                onValueChange={setSelectedCity}
+              >
                 <SelectTrigger id="city">
-                  <SelectValue placeholder="Select city" />
+                  <SelectValue placeholder="All Cities" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Cities</SelectItem>
                   {cities.map((city) => (
                     <SelectItem key={city} value={city}>
                       {city}
