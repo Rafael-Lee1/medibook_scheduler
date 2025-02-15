@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search as SearchIcon } from "lucide-react";
@@ -59,7 +60,7 @@ const Search = () => {
         `);
 
       if (searchTerm) {
-        query = query.or(`exams.name.ilike.%${searchTerm}%,exams.description.ilike.%${searchTerm}%`.split(","));
+        query = query.or(`exams.name.ilike.%${searchTerm}%,exams.description.ilike.%${searchTerm}%`);
       }
 
       if (selectedType) {
