@@ -9,6 +9,171 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          created_at: string
+          id: string
+          laboratory_exam_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          created_at?: string
+          id?: string
+          laboratory_exam_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          created_at?: string
+          id?: string
+          laboratory_exam_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_laboratory_exam_id_fkey"
+            columns: ["laboratory_exam_id"]
+            isOneToOne: false
+            referencedRelation: "laboratory_exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          created_at: string
+          description: string
+          duration_minutes: number
+          id: string
+          name: string
+          preparation_instructions: string | null
+          price: number
+          type: Database["public"]["Enums"]["exam_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          duration_minutes: number
+          id?: string
+          name: string
+          preparation_instructions?: string | null
+          price: number
+          type: Database["public"]["Enums"]["exam_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration_minutes?: number
+          id?: string
+          name?: string
+          preparation_instructions?: string | null
+          price?: number
+          type?: Database["public"]["Enums"]["exam_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      laboratories: {
+        Row: {
+          address: string
+          city: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string
+          state: string
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          address: string
+          city: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone: string
+          state: string
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+          state?: string
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: []
+      }
+      laboratory_exams: {
+        Row: {
+          available_slots_per_day: number
+          created_at: string
+          exam_id: string
+          id: string
+          laboratory_id: string
+          updated_at: string
+        }
+        Insert: {
+          available_slots_per_day: number
+          created_at?: string
+          exam_id: string
+          id?: string
+          laboratory_id: string
+          updated_at?: string
+        }
+        Update: {
+          available_slots_per_day?: number
+          created_at?: string
+          exam_id?: string
+          id?: string
+          laboratory_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "laboratory_exams_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "laboratory_exams_laboratory_id_fkey"
+            columns: ["laboratory_id"]
+            isOneToOne: false
+            referencedRelation: "laboratories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -41,7 +206,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      exam_type:
+        | "blood_test"
+        | "x_ray"
+        | "mri"
+        | "ct_scan"
+        | "ultrasound"
+        | "endoscopy"
+        | "colonoscopy"
+        | "mammogram"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
