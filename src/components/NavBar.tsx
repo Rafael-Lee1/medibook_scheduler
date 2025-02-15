@@ -1,10 +1,29 @@
 
 import { useNavigate } from "react-router-dom";
-import { Calendar, Search, User } from "lucide-react";
+import { Calendar, LogOut, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const NavBar = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error signing out",
+        description: error.message,
+      });
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-panel">
@@ -53,14 +72,25 @@ const NavBar = () => {
             >
               <Calendar size={20} />
             </Button>
-            <Button 
-              variant="outline"
-              className="flex items-center space-x-2"
-              onClick={() => navigate("/profile")}
-            >
-              <User size={18} />
-              <span className="hidden md:inline">Sign In</span>
-            </Button>
+            {user ? (
+              <Button 
+                variant="outline"
+                className="flex items-center space-x-2"
+                onClick={handleSignOut}
+              >
+                <LogOut size={18} />
+                <span className="hidden md:inline">Sign Out</span>
+              </Button>
+            ) : (
+              <Button 
+                variant="outline"
+                className="flex items-center space-x-2"
+                onClick={() => navigate("/auth")}
+              >
+                <User size={18} />
+                <span className="hidden md:inline">Sign In</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
