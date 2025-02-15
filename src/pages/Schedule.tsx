@@ -79,13 +79,13 @@ const Schedule = () => {
       const { data, error } = await supabase
         .from("appointments")
         .select("appointment_time")
-        .eq("laboratory_exam_id", examId)
+        .eq("laboratory_exam_id", examDetails?.id)
         .eq("appointment_date", format(selectedDate, "yyyy-MM-dd"));
 
       if (error) throw error;
       return data.map(apt => apt.appointment_time);
     },
-    enabled: !!selectedDate && !!examId,
+    enabled: !!selectedDate && !!examDetails?.id,
   });
 
   const handleSchedule = async () => {
@@ -116,7 +116,7 @@ const Schedule = () => {
         description: "Your appointment has been scheduled.",
       });
 
-      // Redirect to a confirmation or profile page
+      // Redirect to profile page
       navigate("/profile");
     } catch (error: any) {
       toast({

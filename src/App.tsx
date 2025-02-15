@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Search from "./pages/Search";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
+import Schedule from "./pages/Schedule";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +25,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/search" element={<Search />} />
-            <Route path="/schedule" element={<NotFound />} />
+            <Route path="/schedule" element={<Schedule />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
