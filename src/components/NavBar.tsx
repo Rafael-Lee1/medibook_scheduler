@@ -1,7 +1,13 @@
 
 import { useNavigate } from "react-router-dom";
-import { Calendar, LogOut, Search, User } from "lucide-react";
+import { Calendar, LogOut, Search, User, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -73,14 +79,28 @@ const NavBar = () => {
               <Calendar size={20} />
             </Button>
             {user ? (
-              <Button 
-                variant="outline"
-                className="flex items-center space-x-2"
-                onClick={handleSignOut}
-              >
-                <LogOut size={18} />
-                <span className="hidden md:inline">Sign Out</span>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center space-x-2">
+                    <User size={18} />
+                    <span className="hidden md:inline">Account</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/my-exams")}>
+                    <Clock className="mr-2 h-4 w-4" />
+                    My Scheduled Exams
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button 
                 variant="outline"

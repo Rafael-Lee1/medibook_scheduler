@@ -11,6 +11,7 @@ import Search from "./pages/Search";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Schedule from "./pages/Schedule";
+import MyExams from "./pages/MyExams";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/search" element={<Search />} />
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/my-exams" element={<MyExams />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
