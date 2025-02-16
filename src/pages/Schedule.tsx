@@ -92,7 +92,8 @@ const Schedule = () => {
     }
 
     try {
-      const { error } = await supabase
+      // Create the appointment
+      const { error: appointmentError } = await supabase
         .from("appointments")
         .insert({
           laboratory_exam_id: examDetails.id,
@@ -102,11 +103,37 @@ const Schedule = () => {
           status: "scheduled",
         });
 
-      if (error) throw error;
+      if (appointmentError) throw appointmentError;
+
+      // Get user profile for email notification
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", user.id)
+        .single();
+
+      // Send confirmation email
+      const { error: emailError } = await supabase.functions.invoke(
+        "send-appointment-email",
+        {
+          body: {
+            userEmail: userProfile?.email || user.email,
+            userName: userProfile?.full_name || "Valued Patient",
+            examName: examDetails.exams.name,
+            laboratoryName: examDetails.laboratories.name,
+            appointmentDate: format(selectedDate, "MMMM dd, yyyy"),
+            appointmentTime: selectedTime,
+          },
+        }
+      );
+
+      if (emailError) {
+        console.error("Error sending confirmation email:", emailError);
+      }
 
       toast({
         title: "Success!",
-        description: "Your appointment has been scheduled.",
+        description: "Your appointment has been scheduled. Check your email for confirmation details.",
       });
 
       navigate("/profile");
