@@ -35,6 +35,15 @@ const handler = async (req: Request): Promise<Response> => {
       appointmentTime,
     }: AppointmentEmailRequest = await req.json();
 
+    console.log("Attempting to send email to:", userEmail);
+    console.log("Appointment details:", {
+      userName,
+      examName,
+      laboratoryName,
+      appointmentDate,
+      appointmentTime,
+    });
+
     const emailResponse = await resend.emails.send({
       from: "MediBook <onboarding@resend.dev>",
       to: [userEmail],
@@ -66,6 +75,10 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error sending appointment confirmation email:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+    });
     return new Response(
       JSON.stringify({ error: error.message }),
       {
