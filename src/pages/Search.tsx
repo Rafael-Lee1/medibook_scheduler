@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import {
 import { Card } from "@/components/ui/card";
 import NavBar from "@/components/NavBar";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 type ExamType = "blood_test" | "x_ray" | "mri" | "ct_scan" | "ultrasound" | "endoscopy" | "colonoscopy" | "mammogram" | "other";
 
@@ -32,9 +34,18 @@ type ExamResult = {
 };
 
 const Search = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<ExamType | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
+
+  // Add authentication check
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, navigate]);
 
   const { data: examResults = [], isLoading } = useQuery({
     queryKey: ["exams", searchTerm, selectedType, selectedCity],
@@ -91,6 +102,7 @@ const Search = () => {
         laboratory_state: item.laboratories.state,
       }));
     },
+    enabled: !!user, // Only run query if user is authenticated
   });
 
   const { data: cities = [] } = useQuery({
@@ -104,7 +116,13 @@ const Search = () => {
       if (error) throw error;
       return [...new Set(data.map((item) => item.city))];
     },
+    enabled: !!user, // Only run query if user is authenticated
   });
+
+  // Show loading state if not authenticated yet
+  if (!user) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
@@ -201,7 +219,7 @@ const Search = () => {
                 <Button
                   className="w-full mt-4"
                   onClick={() =>
-                    window.location.href = `/schedule?exam=${result.exam_id}&laboratory=${result.laboratory_id}`
+                    navigate(`/schedule?exam=${result.exam_id}&laboratory=${result.laboratory_id}`)
                   }
                 >
                   Schedule Exam
