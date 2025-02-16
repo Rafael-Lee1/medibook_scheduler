@@ -2,36 +2,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Search as SearchIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card } from "@/components/ui/card";
 import NavBar from "@/components/NavBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-
-type ExamType = "blood_test" | "x_ray" | "mri" | "ct_scan" | "ultrasound" | "endoscopy" | "colonoscopy" | "mammogram" | "other";
-
-type ExamResult = {
-  exam_id: string;
-  exam_name: string;
-  exam_type: ExamType;
-  exam_description: string;
-  exam_price: number;
-  laboratory_id: string;
-  laboratory_name: string;
-  laboratory_address: string;
-  laboratory_city: string;
-  laboratory_state: string;
-};
+import SearchFilters from "@/components/search/SearchFilters";
+import ExamResults from "@/components/search/ExamResults";
+import type { ExamType } from "@/types/exam";
 
 const Search = () => {
   const navigate = useNavigate();
@@ -40,7 +16,6 @@ const Search = () => {
   const [selectedType, setSelectedType] = useState<ExamType | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
-  // Add authentication check
   useEffect(() => {
     if (!user) {
       navigate("/auth", { replace: true });
@@ -102,7 +77,7 @@ const Search = () => {
         laboratory_state: item.laboratories.state,
       }));
     },
-    enabled: !!user, // Only run query if user is authenticated
+    enabled: !!user,
   });
 
   const { data: cities = [] } = useQuery({
@@ -116,12 +91,11 @@ const Search = () => {
       if (error) throw error;
       return [...new Set(data.map((item) => item.city))];
     },
-    enabled: !!user, // Only run query if user is authenticated
+    enabled: !!user,
   });
 
-  // Show loading state if not authenticated yet
   if (!user) {
-    return null; // Will redirect via useEffect
+    return null;
   }
 
   return (
@@ -130,104 +104,17 @@ const Search = () => {
       <main className="container mx-auto px-4 pt-32">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">Find Medical Exams</h1>
-          <div className="grid gap-4 md:grid-cols-4">
-            <div>
-              <Label htmlFor="search">Search</Label>
-              <div className="relative">
-                <SearchIcon className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search exams..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="type">Exam Type</Label>
-              <Select
-                value={selectedType || undefined}
-                onValueChange={(value: ExamType) => setSelectedType(value)}
-              >
-                <SelectTrigger id="type">
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="blood_test">Blood Test</SelectItem>
-                  <SelectItem value="x_ray">X-Ray</SelectItem>
-                  <SelectItem value="mri">MRI</SelectItem>
-                  <SelectItem value="ct_scan">CT Scan</SelectItem>
-                  <SelectItem value="ultrasound">Ultrasound</SelectItem>
-                  <SelectItem value="endoscopy">Endoscopy</SelectItem>
-                  <SelectItem value="colonoscopy">Colonoscopy</SelectItem>
-                  <SelectItem value="mammogram">Mammogram</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="city">City</Label>
-              <Select
-                value={selectedCity || undefined}
-                onValueChange={setSelectedCity}
-              >
-                <SelectTrigger id="city">
-                  <SelectValue placeholder="All Cities" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cities.map((city) => (
-                    <SelectItem key={city} value={city}>
-                      {city}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <SearchFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedType={selectedType}
+            setSelectedType={setSelectedType}
+            selectedCity={selectedCity}
+            setSelectedCity={setSelectedCity}
+            cities={cities}
+          />
         </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {isLoading ? (
-            <p>Loading exams...</p>
-          ) : examResults.length === 0 ? (
-            <p>No exams found. Try adjusting your search criteria.</p>
-          ) : (
-            examResults.map((result: ExamResult) => (
-              <Card
-                key={`${result.exam_id}-${result.laboratory_id}`}
-                className="p-4"
-              >
-                <h3 className="text-xl font-semibold mb-2">
-                  {result.exam_name}
-                </h3>
-                <p className="text-muted-foreground mb-2">
-                  {result.exam_description}
-                </p>
-                <p className="text-primary font-semibold mb-4">
-                  ${result.exam_price.toFixed(2)}
-                </p>
-                <div className="border-t pt-4">
-                  <h4 className="font-semibold">{result.laboratory_name}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {result.laboratory_address}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {result.laboratory_city}, {result.laboratory_state}
-                  </p>
-                </div>
-                <Button
-                  className="w-full mt-4"
-                  onClick={() =>
-                    navigate(`/schedule?exam=${result.exam_id}&laboratory=${result.laboratory_id}`)
-                  }
-                >
-                  Schedule Exam
-                </Button>
-              </Card>
-            ))
-          )}
-        </div>
+        <ExamResults isLoading={isLoading} examResults={examResults} />
       </main>
     </div>
   );
