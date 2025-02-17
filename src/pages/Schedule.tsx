@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ExamDetails } from "@/components/schedule/ExamDetails";
 import { DateSelector } from "@/components/schedule/DateSelector";
 import { TimeSlots } from "@/components/schedule/TimeSlots";
+import { Search } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 const Schedule = () => {
   const [searchParams] = useSearchParams();
@@ -29,7 +31,7 @@ const Schedule = () => {
     }
   }, [user, navigate]);
 
-  const { data: examDetails } = useQuery({
+  const { data: examDetails, isLoading } = useQuery({
     queryKey: ["examDetails", examId, laboratoryId],
     queryFn: async () => {
       if (!examId || !laboratoryId) return null;
@@ -146,12 +148,58 @@ const Schedule = () => {
     }
   };
 
-  if (!examDetails) {
+  if (!examId || !laboratoryId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
+        <NavBar />
+        <main className="container mx-auto px-4 pt-32">
+          <Card className="p-6 text-center">
+            <h1 className="text-2xl font-bold mb-4">Schedule an Appointment</h1>
+            <p className="text-muted-foreground mb-6">
+              To schedule an appointment, first search for and select an exam from our available options.
+            </p>
+            <Button 
+              onClick={() => navigate("/search")}
+              className="flex items-center gap-2"
+            >
+              <Search size={18} />
+              Search for Exams
+            </Button>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
         <NavBar />
         <main className="container mx-auto px-4 pt-32">
           <div>Loading exam details...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!examDetails) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
+        <NavBar />
+        <main className="container mx-auto px-4 pt-32">
+          <Card className="p-6 text-center">
+            <h1 className="text-2xl font-bold mb-4">Exam Not Found</h1>
+            <p className="text-muted-foreground mb-6">
+              We couldn't find the exam you're looking for. Please try searching again.
+            </p>
+            <Button 
+              onClick={() => navigate("/search")}
+              className="flex items-center gap-2"
+            >
+              <Search size={18} />
+              Search for Exams
+            </Button>
+          </Card>
         </main>
       </div>
     );
