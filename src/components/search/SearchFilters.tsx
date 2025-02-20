@@ -52,16 +52,16 @@ const SearchFilters = ({
         <div>
           <Label htmlFor="type">Exam Type</Label>
           <Select
-            value={selectedType || ""}
-            onValueChange={(value: ExamType | "") => {
-              setSelectedType(value || null);
+            value={selectedType || "all"}
+            onValueChange={(value: ExamType | "all") => {
+              setSelectedType(value === "all" ? null : value);
             }}
           >
             <SelectTrigger id="type">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="blood_test">Blood Test</SelectItem>
               <SelectItem value="x_ray">X-Ray</SelectItem>
               <SelectItem value="mri">MRI</SelectItem>
@@ -77,14 +77,14 @@ const SearchFilters = ({
         <div>
           <Label htmlFor="city">City</Label>
           <Select
-            value={selectedCity || ""}
-            onValueChange={(value) => setSelectedCity(value || null)}
+            value={selectedCity || "all"}
+            onValueChange={(value) => setSelectedCity(value === "all" ? null : value)}
           >
             <SelectTrigger id="city">
               <SelectValue placeholder="All Cities" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Cities</SelectItem>
+              <SelectItem value="all">All Cities</SelectItem>
               {cities.map((city) => (
                 <SelectItem key={city} value={city}>
                   {city}
