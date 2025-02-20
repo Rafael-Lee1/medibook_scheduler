@@ -45,20 +45,23 @@ const Search = () => {
           )
         `);
 
-      // Apply search filter for name and description
+      // Build search conditions for name OR description
       if (searchTerm) {
-        query = query.filter('exams.name', 'ilike', `%${searchTerm}%`);
+        query = query.or(`exams.name.ilike.%${searchTerm}%,exams.description.ilike.%${searchTerm}%`);
       }
 
       // Apply exam type filter
       if (selectedType) {
-        query = query.filter('exams.type', 'eq', selectedType);
+        query = query.eq('exams.type', selectedType);
       }
 
       // Apply city filter
       if (selectedCity) {
-        query = query.filter('laboratories.city', 'eq', selectedCity);
+        query = query.eq('laboratories.city', selectedCity);
       }
+
+      // Add console.log to debug the query
+      console.log('Query parameters:', { searchTerm, selectedType, selectedCity });
 
       const { data, error } = await query;
 
@@ -67,7 +70,10 @@ const Search = () => {
         throw error;
       }
 
-      return data?.map((item: any) => ({
+      // Add console.log to see the raw data returned
+      console.log('Raw query results:', data);
+
+      const mappedResults = data?.map((item: any) => ({
         exam_id: item.exams.id,
         exam_name: item.exams.name,
         exam_type: item.exams.type,
@@ -79,6 +85,11 @@ const Search = () => {
         laboratory_city: item.laboratories.city,
         laboratory_state: item.laboratories.state,
       })) ?? [];
+
+      // Add console.log to see the mapped results
+      console.log('Mapped results:', mappedResults);
+
+      return mappedResults;
     },
     enabled: !!user,
   });
@@ -96,7 +107,6 @@ const Search = () => {
         throw error;
       }
 
-      // Remove duplicates and sort alphabetically
       return [...new Set(data.map((item) => item.city))].sort();
     },
     enabled: !!user,
