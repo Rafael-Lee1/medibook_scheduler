@@ -45,24 +45,34 @@ const Search = () => {
           )
         `);
 
+      // Build array of filter conditions for OR clause
+      const searchConditions = [];
       if (searchTerm) {
-        query = query.or([
-          `exams.name.ilike.%${searchTerm}%`,
-          `exams.description.ilike.%${searchTerm}%`
-        ].join(','));
+        searchConditions.push(`exams.name.ilike.%${searchTerm}%`);
+        searchConditions.push(`exams.description.ilike.%${searchTerm}%`);
+      }
+      
+      // Apply search term filter if exists
+      if (searchConditions.length > 0) {
+        query = query.or(searchConditions.join(','));
       }
 
+      // Apply exam type filter if selected
       if (selectedType) {
         query = query.eq("exams.type", selectedType);
       }
 
+      // Apply city filter if selected
       if (selectedCity) {
         query = query.eq("laboratories.city", selectedCity);
       }
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching exams:", error);
+        throw error;
+      }
 
       return data.map((item: any) => ({
         exam_id: item.exams.id,
@@ -88,8 +98,13 @@ const Search = () => {
         .select("city")
         .order("city");
 
-      if (error) throw error;
-      return [...new Set(data.map((item) => item.city))];
+      if (error) {
+        console.error("Error fetching cities:", error);
+        throw error;
+      }
+
+      // Remove duplicates and sort alphabetically
+      return [...new Set(data.map((item) => item.city))].sort();
     },
     enabled: !!user,
   });
@@ -97,6 +112,12 @@ const Search = () => {
   if (!user) {
     return null;
   }
+
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setSelectedType(null);
+    setSelectedCity(null);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
@@ -112,9 +133,14 @@ const Search = () => {
             selectedCity={selectedCity}
             setSelectedCity={setSelectedCity}
             cities={cities}
+            onReset={handleResetFilters}
           />
         </div>
-        <ExamResults isLoading={isLoading} examResults={examResults} />
+        <ExamResults 
+          isLoading={isLoading} 
+          examResults={examResults} 
+          hasFilters={!!(searchTerm || selectedType || selectedCity)}
+        />
       </main>
     </div>
   );

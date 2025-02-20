@@ -5,15 +5,22 @@ import type { ExamResult } from "@/types/exam";
 interface ExamResultsProps {
   isLoading: boolean;
   examResults: ExamResult[];
+  hasFilters: boolean;
 }
 
-const ExamResults = ({ isLoading, examResults }: ExamResultsProps) => {
+const ExamResults = ({ isLoading, examResults, hasFilters }: ExamResultsProps) => {
   if (isLoading) {
     return <p>Loading exams...</p>;
   }
 
   if (examResults.length === 0) {
-    return <p>No exams found. Try adjusting your search criteria.</p>;
+    return (
+      <p className="text-center text-muted-foreground">
+        {hasFilters 
+          ? "No exams found matching your search criteria. Try adjusting your filters."
+          : "No exams found. Please try a different search."}
+      </p>
+    );
   }
 
   return (
