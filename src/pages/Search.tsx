@@ -45,26 +45,19 @@ const Search = () => {
           )
         `);
 
-      // Build array of filter conditions for OR clause
-      const searchConditions = [];
+      // Apply search filter for name and description
       if (searchTerm) {
-        searchConditions.push(`exams.name.ilike.%${searchTerm}%`);
-        searchConditions.push(`exams.description.ilike.%${searchTerm}%`);
-      }
-      
-      // Apply search term filter if exists
-      if (searchConditions.length > 0) {
-        query = query.or(searchConditions.join(','));
+        query = query.filter('exams.name', 'ilike', `%${searchTerm}%`);
       }
 
-      // Apply exam type filter if selected
+      // Apply exam type filter
       if (selectedType) {
-        query = query.eq("exams.type", selectedType);
+        query = query.filter('exams.type', 'eq', selectedType);
       }
 
-      // Apply city filter if selected
+      // Apply city filter
       if (selectedCity) {
-        query = query.eq("laboratories.city", selectedCity);
+        query = query.filter('laboratories.city', 'eq', selectedCity);
       }
 
       const { data, error } = await query;
@@ -74,7 +67,7 @@ const Search = () => {
         throw error;
       }
 
-      return data.map((item: any) => ({
+      return data?.map((item: any) => ({
         exam_id: item.exams.id,
         exam_name: item.exams.name,
         exam_type: item.exams.type,
@@ -85,7 +78,7 @@ const Search = () => {
         laboratory_address: item.laboratories.address,
         laboratory_city: item.laboratories.city,
         laboratory_state: item.laboratories.state,
-      }));
+      })) ?? [];
     },
     enabled: !!user,
   });
