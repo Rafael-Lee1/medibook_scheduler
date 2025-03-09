@@ -26,6 +26,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log("Received request to send email");
+    
     const {
       userEmail,
       userName,
