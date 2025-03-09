@@ -47,7 +47,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const emailResponse = await resend.emails.send({
-      from: "MediBook <onboarding@resend.dev>",
+      from: "MediBook <appointments@medibook.website>",
       to: [userEmail],
       subject: "Your MediBook Appointment Confirmation",
       html: `
