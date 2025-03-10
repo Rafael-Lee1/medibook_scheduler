@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import NavBar from "@/components/NavBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import SearchFilters from "@/components/search/SearchFilters";
 import ExamResults from "@/components/search/ExamResults";
 import type { ExamType } from "@/types/exam";
@@ -12,6 +13,7 @@ import type { ExamType } from "@/types/exam";
 const Search = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<ExamType | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
@@ -127,7 +129,7 @@ const Search = () => {
       <NavBar />
       <main className="container mx-auto px-4 pt-32">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-4">Find Medical Exams</h1>
+          <h1 className="text-3xl font-bold mb-4">{t("search.title")}</h1>
           <SearchFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}

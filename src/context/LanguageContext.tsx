@@ -65,6 +65,18 @@ const translations: Record<Language, Record<string, string>> = {
     "search.allCities": "All Cities",
     "search.scheduleExam": "Schedule Exam",
     
+    // Exam types
+    "examType.all_types": "All Types",
+    "examType.blood_test": "Blood Test",
+    "examType.x_ray": "X-Ray",
+    "examType.mri": "MRI",
+    "examType.ct_scan": "CT Scan",
+    "examType.ultrasound": "Ultrasound",
+    "examType.endoscopy": "Endoscopy",
+    "examType.colonoscopy": "Colonoscopy",
+    "examType.mammogram": "Mammogram",
+    "examType.other": "Other",
+    
     // My Exams page
     "myExams.title": "My Scheduled Exams",
     "myExams.loading": "Loading appointments...",
@@ -131,6 +143,18 @@ const translations: Record<Language, Record<string, string>> = {
     "search.allCities": "Todas as Cidades",
     "search.scheduleExam": "Agendar Exame",
     
+    // Exam types
+    "examType.all_types": "Todos os Tipos",
+    "examType.blood_test": "Exame de Sangue",
+    "examType.x_ray": "Raio-X",
+    "examType.mri": "Ressonância Magnética",
+    "examType.ct_scan": "Tomografia Computadorizada",
+    "examType.ultrasound": "Ultrassom",
+    "examType.endoscopy": "Endoscopia",
+    "examType.colonoscopy": "Colonoscopia",
+    "examType.mammogram": "Mamografia",
+    "examType.other": "Outros",
+    
     // My Exams page
     "myExams.title": "Meus Exames Agendados",
     "myExams.loading": "Carregando agendamentos...",
@@ -196,6 +220,18 @@ const translations: Record<Language, Record<string, string>> = {
     "search.city": "Ciudad",
     "search.allCities": "Todas las Ciudades",
     "search.scheduleExam": "Programar Examen",
+    
+    // Exam types
+    "examType.all_types": "Todos los Tipos",
+    "examType.blood_test": "Análisis de Sangre",
+    "examType.x_ray": "Rayos X",
+    "examType.mri": "Resonancia Magnética",
+    "examType.ct_scan": "Tomografía Computarizada",
+    "examType.ultrasound": "Ultrasonido",
+    "examType.endoscopy": "Endoscopia",
+    "examType.colonoscopy": "Colonoscopia",
+    "examType.mammogram": "Mamografía",
+    "examType.other": "Otros",
     
     // My Exams page
     "myExams.title": "Mis Exámenes Programados",

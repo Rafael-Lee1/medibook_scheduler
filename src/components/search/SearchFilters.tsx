@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import type { ExamType } from "@/types/exam";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface SearchFiltersProps {
   searchTerm: string;
@@ -33,16 +34,31 @@ const SearchFilters = ({
   cities,
   onReset,
 }: SearchFiltersProps) => {
+  const { t } = useLanguage();
+  
+  const examTypes: { value: "all_types" | ExamType; label: string }[] = [
+    { value: "all_types", label: t("examType.all_types") },
+    { value: "blood_test", label: t("examType.blood_test") },
+    { value: "x_ray", label: t("examType.x_ray") },
+    { value: "mri", label: t("examType.mri") },
+    { value: "ct_scan", label: t("examType.ct_scan") },
+    { value: "ultrasound", label: t("examType.ultrasound") },
+    { value: "endoscopy", label: t("examType.endoscopy") },
+    { value: "colonoscopy", label: t("examType.colonoscopy") },
+    { value: "mammogram", label: t("examType.mammogram") },
+    { value: "other", label: t("examType.other") },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-[2fr,1fr,1fr,auto]">
         <div>
-          <Label htmlFor="search">Search</Label>
+          <Label htmlFor="search">{t("search.label")}</Label>
           <div className="relative">
             <SearchIcon className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               id="search"
-              placeholder="Search exams by name..."
+              placeholder={t("search.placeholder")}
               className="pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -50,7 +66,7 @@ const SearchFilters = ({
           </div>
         </div>
         <div>
-          <Label htmlFor="type">Exam Type</Label>
+          <Label htmlFor="type">{t("search.examType")}</Label>
           <Select
             value={selectedType || "all_types"}
             onValueChange={(value) => {
@@ -58,33 +74,28 @@ const SearchFilters = ({
             }}
           >
             <SelectTrigger id="type">
-              <SelectValue placeholder="All Types" />
+              <SelectValue placeholder={t("search.allTypes")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all_types">All Types</SelectItem>
-              <SelectItem value="blood_test">Blood Test</SelectItem>
-              <SelectItem value="x_ray">X-Ray</SelectItem>
-              <SelectItem value="mri">MRI</SelectItem>
-              <SelectItem value="ct_scan">CT Scan</SelectItem>
-              <SelectItem value="ultrasound">Ultrasound</SelectItem>
-              <SelectItem value="endoscopy">Endoscopy</SelectItem>
-              <SelectItem value="colonoscopy">Colonoscopy</SelectItem>
-              <SelectItem value="mammogram">Mammogram</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              {examTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         <div>
-          <Label htmlFor="city">City</Label>
+          <Label htmlFor="city">{t("search.city")}</Label>
           <Select
             value={selectedCity || "all_cities"}
             onValueChange={(value) => setSelectedCity(value === "all_cities" ? null : value)}
           >
             <SelectTrigger id="city">
-              <SelectValue placeholder="All Cities" />
+              <SelectValue placeholder={t("search.allCities")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all_cities">All Cities</SelectItem>
+              <SelectItem value="all_cities">{t("search.allCities")}</SelectItem>
               {cities.map((city) => (
                 <SelectItem key={city} value={city}>
                   {city}
