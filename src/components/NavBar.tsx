@@ -8,17 +8,36 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { useQuery } from "@tanstack/react-query";
 
 const NavBar = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  // Fetch user profile data to get the avatar URL
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("avatar_url, full_name")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
   const handleSignOut = async () => {
     try {
@@ -86,7 +105,16 @@ const NavBar = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="flex items-center space-x-2">
-                    <User size={18} />
+                    {profile?.avatar_url ? (
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={profile.avatar_url} alt={profile?.full_name || "User"} />
+                        <AvatarFallback>
+                          {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <User size={18} />
+                    )}
                     <span className="hidden md:inline">{t("nav.account")}</span>
                   </Button>
                 </DropdownMenuTrigger>
