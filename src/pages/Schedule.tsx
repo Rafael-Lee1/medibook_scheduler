@@ -2,19 +2,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
 import NavBar from "@/components/NavBar";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ExamDetails } from "@/components/schedule/ExamDetails";
-import { DateSelector } from "@/components/schedule/DateSelector";
-import { TimeSlots } from "@/components/schedule/TimeSlots";
-import { PaymentForm } from "@/components/payment/PaymentForm";
-import { PaymentConfirmation } from "@/components/payment/PaymentConfirmation";
-import { Search } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { SearchPrompt } from "@/components/schedule/SearchPrompt";
+import { ExamNotFound } from "@/components/schedule/ExamNotFound";
+import { SchedulingSteps } from "@/components/schedule/SchedulingSteps";
 
 const Schedule = () => {
   const [searchParams] = useSearchParams();
@@ -88,66 +84,12 @@ const Schedule = () => {
     enabled: !!selectedDate && !!examDetails?.id,
   });
 
-  const handleSchedule = async () => {
-    if (!selectedDate || !selectedTime || !user || !examDetails) {
-      toast({
-        title: "Error",
-        description: "Please select both date and time for your appointment",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Create the appointment
-      const { data: appointmentData, error: appointmentError } = await supabase
-        .from("appointments")
-        .insert({
-          laboratory_exam_id: examDetails.id,
-          appointment_date: format(selectedDate, "yyyy-MM-dd"),
-          appointment_time: selectedTime,
-          user_id: user.id,
-          status: "scheduled",
-        })
-        .select()
-        .single();
-
-      if (appointmentError) throw appointmentError;
-
-      setAppointmentId(appointmentData.id);
-      setSchedulingStep("payment");
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handlePaymentSuccess = (paymentData: any) => {
-    setPaymentDetails(paymentData);
-    setSchedulingStep("confirmation");
-  };
-
   if (!examId || !laboratoryId) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
         <NavBar />
         <main className="container mx-auto px-4 pt-32">
-          <Card className="p-6 text-center">
-            <h1 className="text-2xl font-bold mb-4">Schedule an Appointment</h1>
-            <p className="text-muted-foreground mb-6">
-              To schedule an appointment, first search for and select an exam from our available options.
-            </p>
-            <Button 
-              onClick={() => navigate("/search")}
-              className="flex items-center gap-2"
-            >
-              <Search size={18} />
-              Search for Exams
-            </Button>
-          </Card>
+          <SearchPrompt />
         </main>
       </div>
     );
@@ -169,19 +111,7 @@ const Schedule = () => {
       <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
         <NavBar />
         <main className="container mx-auto px-4 pt-32">
-          <Card className="p-6 text-center">
-            <h1 className="text-2xl font-bold mb-4">Exam Not Found</h1>
-            <p className="text-muted-foreground mb-6">
-              We couldn't find the exam you're looking for. Please try searching again.
-            </p>
-            <Button 
-              onClick={() => navigate("/search")}
-              className="flex items-center gap-2"
-            >
-              <Search size={18} />
-              Search for Exams
-            </Button>
-          </Card>
+          <ExamNotFound />
         </main>
       </div>
     );
@@ -197,52 +127,21 @@ const Schedule = () => {
             laboratory={examDetails.laboratories}
           />
 
-          {schedulingStep === "date-time" && (
-            <>
-              <div className="grid gap-6 md:grid-cols-2">
-                <DateSelector
-                  selectedDate={selectedDate}
-                  onDateSelect={setSelectedDate}
-                />
-                <TimeSlots
-                  selectedDate={selectedDate}
-                  selectedTime={selectedTime}
-                  existingAppointments={existingAppointments}
-                  onTimeSelect={setSelectedTime}
-                />
-              </div>
-
-              <div className="mt-6 flex justify-end">
-                <Button
-                  size="lg"
-                  onClick={handleSchedule}
-                  disabled={!selectedDate || !selectedTime}
-                >
-                  Proceed to Payment
-                </Button>
-              </div>
-            </>
-          )}
-
-          {schedulingStep === "payment" && examDetails && appointmentId && (
-            <PaymentForm 
-              appointmentId={appointmentId}
-              examPrice={examDetails.exams.price}
-              onPaymentSuccess={handlePaymentSuccess}
-            />
-          )}
-
-          {schedulingStep === "confirmation" && paymentDetails && (
-            <PaymentConfirmation 
-              paymentDetails={paymentDetails}
-              appointmentDetails={{
-                examName: examDetails.exams.name,
-                laboratoryName: examDetails.laboratories.name,
-                appointmentDate: selectedDate ? format(selectedDate, "MMMM dd, yyyy") : "",
-                appointmentTime: selectedTime || "",
-              }}
-            />
-          )}
+          <SchedulingSteps
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            selectedTime={selectedTime}
+            setSelectedTime={setSelectedTime}
+            existingAppointments={existingAppointments}
+            examDetails={examDetails}
+            user={user}
+            schedulingStep={schedulingStep}
+            setSchedulingStep={setSchedulingStep}
+            appointmentId={appointmentId}
+            setAppointmentId={setAppointmentId}
+            paymentDetails={paymentDetails}
+            setPaymentDetails={setPaymentDetails}
+          />
         </div>
       </main>
     </div>
