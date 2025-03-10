@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ExamDetails } from "@/components/schedule/ExamDetails";
 import { DateSelector } from "@/components/schedule/DateSelector";
 import { TimeSlots } from "@/components/schedule/TimeSlots";
+import { PaymentForm } from "@/components/payment/PaymentForm";
+import { PaymentConfirmation } from "@/components/payment/PaymentConfirmation";
 import { Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -21,6 +23,9 @@ const Schedule = () => {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
+  const [schedulingStep, setSchedulingStep] = useState<"date-time" | "payment" | "confirmation">("date-time");
+  const [appointmentId, setAppointmentId] = useState<string>();
+  const [paymentDetails, setPaymentDetails] = useState<any>(null);
 
   const examId = searchParams.get("exam");
   const laboratoryId = searchParams.get("laboratory");
@@ -95,7 +100,7 @@ const Schedule = () => {
 
     try {
       // Create the appointment
-      const { error: appointmentError } = await supabase
+      const { data: appointmentData, error: appointmentError } = await supabase
         .from("appointments")
         .insert({
           laboratory_exam_id: examDetails.id,
@@ -103,42 +108,14 @@ const Schedule = () => {
           appointment_time: selectedTime,
           user_id: user.id,
           status: "scheduled",
-        });
+        })
+        .select()
+        .single();
 
       if (appointmentError) throw appointmentError;
 
-      // Get user profile for email notification
-      const { data: userProfile } = await supabase
-        .from("profiles")
-        .select("email, full_name")
-        .eq("id", user.id)
-        .single();
-
-      // Send confirmation email
-      const { error: emailError } = await supabase.functions.invoke(
-        "send-appointment-email",
-        {
-          body: {
-            userEmail: userProfile?.email || user.email,
-            userName: userProfile?.full_name || "Valued Patient",
-            examName: examDetails.exams.name,
-            laboratoryName: examDetails.laboratories.name,
-            appointmentDate: format(selectedDate, "MMMM dd, yyyy"),
-            appointmentTime: selectedTime,
-          },
-        }
-      );
-
-      if (emailError) {
-        console.error("Error sending confirmation email:", emailError);
-      }
-
-      toast({
-        title: "Success!",
-        description: "Your appointment has been scheduled. Check your email for confirmation details.",
-      });
-
-      navigate("/profile");
+      setAppointmentId(appointmentData.id);
+      setSchedulingStep("payment");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -146,6 +123,11 @@ const Schedule = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handlePaymentSuccess = (paymentData: any) => {
+    setPaymentDetails(paymentData);
+    setSchedulingStep("confirmation");
   };
 
   if (!examId || !laboratoryId) {
@@ -208,35 +190,59 @@ const Schedule = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
       <NavBar />
-      <main className="container mx-auto px-4 pt-32">
+      <main className="container mx-auto px-4 pt-32 pb-16">
         <div className="max-w-4xl mx-auto">
           <ExamDetails
             exam={examDetails.exams}
             laboratory={examDetails.laboratories}
           />
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <DateSelector
-              selectedDate={selectedDate}
-              onDateSelect={setSelectedDate}
-            />
-            <TimeSlots
-              selectedDate={selectedDate}
-              selectedTime={selectedTime}
-              existingAppointments={existingAppointments}
-              onTimeSelect={setSelectedTime}
-            />
-          </div>
+          {schedulingStep === "date-time" && (
+            <>
+              <div className="grid gap-6 md:grid-cols-2">
+                <DateSelector
+                  selectedDate={selectedDate}
+                  onDateSelect={setSelectedDate}
+                />
+                <TimeSlots
+                  selectedDate={selectedDate}
+                  selectedTime={selectedTime}
+                  existingAppointments={existingAppointments}
+                  onTimeSelect={setSelectedTime}
+                />
+              </div>
 
-          <div className="mt-6 flex justify-end">
-            <Button
-              size="lg"
-              onClick={handleSchedule}
-              disabled={!selectedDate || !selectedTime}
-            >
-              Confirm Appointment
-            </Button>
-          </div>
+              <div className="mt-6 flex justify-end">
+                <Button
+                  size="lg"
+                  onClick={handleSchedule}
+                  disabled={!selectedDate || !selectedTime}
+                >
+                  Proceed to Payment
+                </Button>
+              </div>
+            </>
+          )}
+
+          {schedulingStep === "payment" && examDetails && appointmentId && (
+            <PaymentForm 
+              appointmentId={appointmentId}
+              examPrice={examDetails.exams.price}
+              onPaymentSuccess={handlePaymentSuccess}
+            />
+          )}
+
+          {schedulingStep === "confirmation" && paymentDetails && (
+            <PaymentConfirmation 
+              paymentDetails={paymentDetails}
+              appointmentDetails={{
+                examName: examDetails.exams.name,
+                laboratoryName: examDetails.laboratories.name,
+                appointmentDate: selectedDate ? format(selectedDate, "MMMM dd, yyyy") : "",
+                appointmentTime: selectedTime || "",
+              }}
+            />
+          )}
         </div>
       </main>
     </div>
