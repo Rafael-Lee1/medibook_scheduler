@@ -11,11 +11,14 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useLanguage } from "@/context/LanguageContext";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const NavBar = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleSignOut = async () => {
     try {
@@ -49,7 +52,7 @@ const NavBar = () => {
                 onClick={() => navigate("/search")}
               >
                 <Search size={18} />
-                <span>Find Exams</span>
+                <span>{t("nav.findExams")}</span>
               </Button>
               <Button 
                 variant="ghost"
@@ -57,11 +60,12 @@ const NavBar = () => {
                 onClick={() => navigate("/schedule")}
               >
                 <Calendar size={18} />
-                <span>Schedule</span>
+                <span>{t("nav.schedule")}</span>
               </Button>
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            <LanguageSwitcher />
             <Button 
               variant="ghost"
               size="icon"
@@ -83,21 +87,21 @@ const NavBar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="flex items-center space-x-2">
                     <User size={18} />
-                    <span className="hidden md:inline">Account</span>
+                    <span className="hidden md:inline">{t("nav.account")}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <User className="mr-2 h-4 w-4" />
-                    Profile
+                    {t("nav.profile")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/my-exams")}>
                     <Clock className="mr-2 h-4 w-4" />
-                    My Scheduled Exams
+                    {t("nav.myExams")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    {t("nav.signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -108,7 +112,7 @@ const NavBar = () => {
                 onClick={() => navigate("/auth")}
               >
                 <User size={18} />
-                <span className="hidden md:inline">Sign In</span>
+                <span className="hidden md:inline">{t("nav.signIn")}</span>
               </Button>
             )}
           </div>

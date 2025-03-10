@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import NavBar from "@/components/NavBar";
+import { useLanguage } from "@/context/LanguageContext";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -19,6 +20,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,13 +68,13 @@ const Auth = () => {
       <main className="container max-w-lg mx-auto px-4 pt-32">
         <Card className="p-6">
           <h1 className="text-2xl font-semibold text-center mb-6">
-            {isSignUp ? "Create an Account" : "Welcome Back"}
+            {isSignUp ? t("auth.createAccount") : t("auth.welcomeBack")}
           </h1>
           
           <form onSubmit={handleAuth} className="space-y-4">
             {isSignUp && (
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">{t("auth.fullName")}</Label>
                 <Input
                   id="fullName"
                   placeholder="John Doe"
@@ -84,7 +86,7 @@ const Auth = () => {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -96,7 +98,7 @@ const Auth = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("auth.password")}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -123,20 +125,20 @@ const Auth = () => {
             </div>
             
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
+              {loading ? t("auth.waiting") : isSignUp ? t("auth.signUp") : t("auth.signIn")}
             </Button>
           </form>
           
           <div className="mt-4 text-center text-sm">
             <span className="text-muted-foreground">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}
+              {isSignUp ? t("auth.haveAccount") : t("auth.noAccount")}
             </span>{" "}
             <button
               type="button"
               className="text-primary hover:underline"
               onClick={() => setIsSignUp(!isSignUp)}
             >
-              {isSignUp ? "Sign In" : "Sign Up"}
+              {isSignUp ? t("auth.signIn") : t("auth.signUp")}
             </button>
           </div>
         </Card>

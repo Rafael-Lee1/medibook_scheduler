@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import NavBar from "@/components/NavBar";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/context/LanguageContext";
 
 const ExamCard = ({ title, description, icon: Icon }: { title: string; description: string; icon: any }) => (
   <div className="glass-panel rounded-2xl p-6 fade-up">
@@ -19,6 +20,7 @@ const ExamCard = ({ title, description, icon: Icon }: { title: string; descripti
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,26 +35,25 @@ const Index = () => {
         {/* Hero Section */}
         <section className="text-center py-20 md:py-32 fade-in">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Book Your Medical Imaging
+            {t("home.title")}
             <br />
-            <span className="text-primary">Appointment Today</span>
+            <span className="text-primary">{t("home.subtitle")}</span>
           </h1>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Fast and easy scheduling for all your medical imaging needs.
-            Find the nearest facility and book your appointment in minutes.
+            {t("home.description")}
           </p>
           
           <form onSubmit={handleSearch} className="max-w-lg mx-auto flex gap-2">
             <Input
               type="text"
-              placeholder="Search for exams or labs..."
+              placeholder={t("home.searchPlaceholder")}
               className="h-12"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <Button type="submit" size="lg" className="h-12">
               <Search className="mr-2" />
-              Search
+              {t("home.search")}
             </Button>
           </form>
         </section>
@@ -60,28 +61,28 @@ const Index = () => {
         {/* Featured Exams */}
         <section className="py-20">
           <h2 className="text-3xl font-semibold text-center mb-12">
-            Available Diagnostic Services
+            {t("home.services")}
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <ExamCard
-              title="MRI Scan"
-              description="High-resolution magnetic resonance imaging for detailed internal body examination."
+              title={t("exam.mri.title")}
+              description={t("exam.mri.description")}
               icon={Search}
             />
             <ExamCard
-              title="CT Scan"
-              description="Advanced computed tomography scanning for cross-sectional body imaging."
+              title={t("exam.ct.title")}
+              description={t("exam.ct.description")}
               icon={Search}
             />
             <ExamCard
-              title="X-Ray"
-              description="Quick and efficient diagnostic imaging for bones and chest examinations."
+              title={t("exam.xray.title")}
+              description={t("exam.xray.description")}
               icon={Search}
             />
           </div>
           <div className="text-center mt-12">
             <Button size="lg" onClick={() => navigate("/search")}>
-              View All Services
+              {t("home.viewAll")}
             </Button>
           </div>
         </section>
