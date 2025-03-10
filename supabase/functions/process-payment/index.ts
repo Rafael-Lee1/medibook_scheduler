@@ -59,6 +59,9 @@ async function sendPaymentConfirmationEmail(userEmail: string, userName: string,
       <p>Thank you for choosing MediBook for your medical exams.</p>
     `;
     
+    console.log("Sending email to:", userEmail);
+    console.log("Email subject:", emailSubject);
+    
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -79,7 +82,9 @@ async function sendPaymentConfirmationEmail(userEmail: string, userName: string,
       throw new Error(`Failed to send email: ${JSON.stringify(errorData)}`);
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    console.log("Email sent successfully:", responseData);
+    return responseData;
   } catch (error) {
     console.error("Error in sendPaymentConfirmationEmail:", error);
     throw error;
@@ -99,6 +104,7 @@ serve(async (req) => {
     const { appointmentId, paymentMethod, amount, userId } = requestData;
 
     console.log(`Processing payment for appointment ${appointmentId}`);
+    console.log(`Payment method: ${paymentMethod}, Amount: ${amount}`);
 
     // 1. Get appointment details
     const { data: appointmentData, error: appointmentError } = await supabase
@@ -134,6 +140,8 @@ serve(async (req) => {
       throw userError;
     }
 
+    console.log("User profile:", userProfile);
+
     // 3. Generate a transaction ID (in real app, this would come from payment processor)
     const transactionId = `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -157,6 +165,8 @@ serve(async (req) => {
       throw paymentError;
     }
 
+    console.log("Payment created:", paymentData);
+
     // 5. Generate invoice (only for paid exams)
     const appointmentDetails = {
       appointment_date: appointmentData.appointment_date,
@@ -164,6 +174,8 @@ serve(async (req) => {
       exam_name: appointmentData.laboratory_exams.exams.name,
       laboratory_name: appointmentData.laboratory_exams.laboratories.name,
     };
+
+    console.log("Appointment details:", appointmentDetails);
 
     const invoiceUrl = await generateInvoice(paymentData, appointmentDetails, userProfile);
 
@@ -181,12 +193,17 @@ serve(async (req) => {
     }
 
     // 7. Send confirmation email
-    await sendPaymentConfirmationEmail(
-      userProfile.email || "",
-      userProfile.full_name || "Valued Patient",
-      { ...paymentData, invoice_url: invoiceUrl },
-      appointmentDetails
-    );
+    if (!userProfile.email) {
+      console.warn("User email is missing, cannot send confirmation email");
+    } else {
+      console.log("Sending confirmation email to:", userProfile.email);
+      await sendPaymentConfirmationEmail(
+        userProfile.email,
+        userProfile.full_name || "Valued Patient",
+        { ...paymentData, invoice_url: invoiceUrl },
+        appointmentDetails
+      );
+    }
 
     // 8. Return success response
     return new Response(
