@@ -17,6 +17,9 @@ interface AppointmentEmailRequest {
   laboratoryName: string;
   appointmentDate: string;
   appointmentTime: string;
+  action?: "booked" | "rescheduled" | "canceled";
+  previousDate?: string;
+  previousTime?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -35,6 +38,9 @@ const handler = async (req: Request): Promise<Response> => {
       laboratoryName,
       appointmentDate,
       appointmentTime,
+      action = "booked",
+      previousDate,
+      previousTime,
     }: AppointmentEmailRequest = await req.json();
 
     console.log("Attempting to send email to:", userEmail);
@@ -44,26 +50,78 @@ const handler = async (req: Request): Promise<Response> => {
       laboratoryName,
       appointmentDate,
       appointmentTime,
+      action,
+      previousDate,
+      previousTime,
     });
+
+    let subject = "Your MediBook Appointment Confirmation";
+    let html = "";
+
+    switch (action) {
+      case "booked":
+        subject = "Your MediBook Appointment Confirmation";
+        html = `
+          <h1>Appointment Confirmation</h1>
+          <p>Dear ${userName},</p>
+          <p>Your appointment has been successfully scheduled!</p>
+          <h2>Appointment Details:</h2>
+          <ul>
+            <li>Exam: ${examName}</li>
+            <li>Laboratory: ${laboratoryName}</li>
+            <li>Date: ${appointmentDate}</li>
+            <li>Time: ${appointmentTime}</li>
+          </ul>
+          <p>If you need to reschedule or cancel your appointment, please visit your profile page.</p>
+          <p>Best regards,<br>The MediBook Team</p>
+        `;
+        break;
+      case "rescheduled":
+        subject = "Your MediBook Appointment Has Been Rescheduled";
+        html = `
+          <h1>Appointment Rescheduled</h1>
+          <p>Dear ${userName},</p>
+          <p>Your appointment has been successfully rescheduled!</p>
+          <h2>Previous Appointment:</h2>
+          <ul>
+            <li>Date: ${previousDate}</li>
+            <li>Time: ${previousTime}</li>
+          </ul>
+          <h2>New Appointment Details:</h2>
+          <ul>
+            <li>Exam: ${examName}</li>
+            <li>Laboratory: ${laboratoryName}</li>
+            <li>Date: ${appointmentDate}</li>
+            <li>Time: ${appointmentTime}</li>
+          </ul>
+          <p>If you need to make further changes to your appointment, please visit your profile page.</p>
+          <p>Best regards,<br>The MediBook Team</p>
+        `;
+        break;
+      case "canceled":
+        subject = "Your MediBook Appointment Has Been Canceled";
+        html = `
+          <h1>Appointment Cancellation</h1>
+          <p>Dear ${userName},</p>
+          <p>Your appointment has been successfully canceled.</p>
+          <h2>Canceled Appointment Details:</h2>
+          <ul>
+            <li>Exam: ${examName}</li>
+            <li>Laboratory: ${laboratoryName}</li>
+            <li>Date: ${appointmentDate}</li>
+            <li>Time: ${appointmentTime}</li>
+          </ul>
+          <p>If you wish to schedule a new appointment, please visit our website.</p>
+          <p>Best regards,<br>The MediBook Team</p>
+        `;
+        break;
+    }
 
     const emailResponse = await resend.emails.send({
       from: "MediBook <appointments@medibook.website>",
       to: [userEmail],
-      subject: "Your MediBook Appointment Confirmation",
-      html: `
-        <h1>Appointment Confirmation</h1>
-        <p>Dear ${userName},</p>
-        <p>Your appointment has been successfully scheduled!</p>
-        <h2>Appointment Details:</h2>
-        <ul>
-          <li>Exam: ${examName}</li>
-          <li>Laboratory: ${laboratoryName}</li>
-          <li>Date: ${appointmentDate}</li>
-          <li>Time: ${appointmentTime}</li>
-        </ul>
-        <p>If you need to reschedule or cancel your appointment, please visit your profile page.</p>
-        <p>Best regards,<br>The MediBook Team</p>
-      `,
+      subject: subject,
+      html: html,
     });
 
     console.log("Email sent successfully:", emailResponse);
