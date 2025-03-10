@@ -6,6 +6,7 @@ import { DateSelector } from "../DateSelector";
 import { TimeSlots } from "../TimeSlots";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface DateTimeSelectionProps {
   selectedDate: Date | undefined;
@@ -29,6 +30,7 @@ export const DateTimeSelection = ({
   onProceed,
 }: DateTimeSelectionProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSchedule = async () => {
@@ -59,7 +61,45 @@ export const DateTimeSelection = ({
 
       if (appointmentError) throw appointmentError;
 
-      onProceed(appointmentData.id);
+      // Send confirmation email
+      try {
+        const emailResponse = await fetch(
+          "https://dxnzcvjyqghisjmmmiwl.supabase.co/functions/v1/send-appointment-email",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userEmail: user.email,
+              userName: user.user_metadata?.full_name || "Patient",
+              examName: examDetails.exams.name,
+              laboratoryName: examDetails.laboratories.name,
+              appointmentDate: format(selectedDate, "PPP"),
+              appointmentTime: selectedTime,
+              notificationType: "confirmation",
+            }),
+          }
+        );
+
+        if (!emailResponse.ok) {
+          console.error("Failed to send confirmation email");
+        }
+      } catch (emailError) {
+        console.error("Error sending confirmation email:", emailError);
+        // Continue with the flow even if email fails
+      }
+
+      toast({
+        title: "Appointment Confirmed",
+        description: "Your appointment has been successfully scheduled.",
+      });
+
+      // Redirect to My Exams page after a short delay
+      setTimeout(() => {
+        navigate("/my-exams");
+      }, 1500);
+      
     } catch (error: any) {
       toast({
         title: "Error",

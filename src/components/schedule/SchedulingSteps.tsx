@@ -1,7 +1,5 @@
 
-import { useState } from "react";
 import { DateTimeSelection } from "./steps/DateTimeSelection";
-import { ConfirmationStep } from "./steps/ConfirmationStep";
 
 interface SchedulingStepsProps {
   selectedDate: Date | undefined;
@@ -34,55 +32,22 @@ export const SchedulingSteps = ({
   paymentDetails,
   setPaymentDetails,
 }: SchedulingStepsProps) => {
-  const handleAppointmentCreated = async (newAppointmentId: string) => {
+  const handleAppointmentCreated = (newAppointmentId: string) => {
     setAppointmentId(newAppointmentId);
-    
-    // Process the booking directly without payment step
-    try {
-      const { data: supabaseResponse } = await fetch("https://dxnzcvjyqghisjmmmiwl.supabase.co/functions/v1/process-payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("supabase.auth.token")}`,
-        },
-        body: JSON.stringify({
-          appointmentId: newAppointmentId,
-          userId: user.id,
-        }),
-      }).then(res => res.json());
-      
-      setPaymentDetails(supabaseResponse.payment);
-      setSchedulingStep("confirmation");
-    } catch (error) {
-      console.error("Error processing appointment:", error);
-    }
+    // We no longer need to process payment or change steps
+    // as we'll redirect directly to my-exams page
   };
 
-  if (schedulingStep === "date-time") {
-    return (
-      <DateTimeSelection
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        selectedTime={selectedTime}
-        setSelectedTime={setSelectedTime}
-        existingAppointments={existingAppointments}
-        examDetails={examDetails}
-        user={user}
-        onProceed={handleAppointmentCreated}
-      />
-    );
-  }
-
-  if (schedulingStep === "confirmation" && paymentDetails) {
-    return (
-      <ConfirmationStep
-        paymentDetails={paymentDetails}
-        examDetails={examDetails}
-        selectedDate={selectedDate}
-        selectedTime={selectedTime}
-      />
-    );
-  }
-
-  return null;
+  return (
+    <DateTimeSelection
+      selectedDate={selectedDate}
+      setSelectedDate={setSelectedDate}
+      selectedTime={selectedTime}
+      setSelectedTime={setSelectedTime}
+      existingAppointments={existingAppointments}
+      examDetails={examDetails}
+      user={user}
+      onProceed={handleAppointmentCreated}
+    />
+  );
 };

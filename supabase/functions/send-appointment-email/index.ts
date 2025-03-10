@@ -58,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
         html = `
           <h1>Appointment Confirmation</h1>
           <p>Dear ${userName},</p>
-          <p>Your appointment has been successfully scheduled!</p>
+          <p>Thank you for scheduling your medical exam with MediBook. Your appointment has been successfully scheduled!</p>
           <h2>Appointment Details:</h2>
           <ul>
             <li>Exam: ${examName}</li>
@@ -66,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
             <li>Date: ${appointmentDate}</li>
             <li>Time: ${appointmentTime}</li>
           </ul>
-          <p>If you need to reschedule or cancel your appointment, please visit your profile page.</p>
+          <p>Please arrive 15 minutes before your scheduled time. If you need to reschedule or cancel your appointment, please visit your profile page.</p>
           <p>Best regards,<br>The MediBook Team</p>
         `;
         break;
@@ -83,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
             <li>Date: ${appointmentDate}</li>
             <li>Time: ${appointmentTime}</li>
           </ul>
-          <p>If you need to make further changes to your appointment, please visit your profile page.</p>
+          <p>Please arrive 15 minutes before your scheduled time. If you need to make further changes to your appointment, please visit your profile page.</p>
           <p>Best regards,<br>The MediBook Team</p>
         `;
         break;
