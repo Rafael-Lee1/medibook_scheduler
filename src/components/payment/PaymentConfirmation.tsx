@@ -36,10 +36,14 @@ export const PaymentConfirmation = ({
         return "PayPal";
       case "pix":
         return "Pix";
+      case "free":
+        return "Free";
       default:
         return method;
     }
   };
+
+  const isFree = paymentDetails.payment_method === "free";
 
   return (
     <Card className="p-6 max-w-xl mx-auto">
@@ -47,9 +51,11 @@ export const PaymentConfirmation = ({
         <div className="flex justify-center mb-4">
           <CheckCircle className="h-16 w-16 text-green-500" />
         </div>
-        <h1 className="text-2xl font-bold mb-2">Payment Successful!</h1>
+        <h1 className="text-2xl font-bold mb-2">{isFree ? "Exam Released" : "Payment Successful!"}</h1>
         <p className="text-muted-foreground">
-          Your payment has been processed successfully.
+          {isFree 
+            ? "Your exam has been released successfully" 
+            : "Your payment has been processed successfully."}
         </p>
       </div>
 
@@ -79,15 +85,15 @@ export const PaymentConfirmation = ({
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold mb-2">Payment Details</h3>
+          <h3 className="text-lg font-semibold mb-2">{isFree ? "Release Details" : "Payment Details"}</h3>
           <div className="bg-secondary/20 p-4 rounded-md">
             <dl className="grid grid-cols-2 gap-3">
               <div>
                 <dt className="text-sm text-muted-foreground">Amount</dt>
-                <dd className="font-medium">${paymentDetails.amount.toFixed(2)}</dd>
+                <dd className="font-medium">{isFree ? "Free" : `$${paymentDetails.amount.toFixed(2)}`}</dd>
               </div>
               <div>
-                <dt className="text-sm text-muted-foreground">Payment Method</dt>
+                <dt className="text-sm text-muted-foreground">{isFree ? "Release Method" : "Payment Method"}</dt>
                 <dd className="font-medium">{formatPaymentMethod(paymentDetails.payment_method)}</dd>
               </div>
               <div>
@@ -103,7 +109,7 @@ export const PaymentConfirmation = ({
         </div>
 
         <div className="text-center space-y-3 pt-3">
-          {paymentDetails.invoice_url && (
+          {!isFree && paymentDetails.invoice_url && (
             <Button
               variant="outline"
               className="w-full"

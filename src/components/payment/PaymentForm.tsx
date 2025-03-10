@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreditCard, Banknote, Wallet, Check } from "lucide-react";
+import { CreditCard, Banknote, Wallet, Check, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -24,7 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
 const paymentSchema = z.object({
-  paymentMethod: z.enum(["credit_card", "debit_card", "paypal", "pix"]),
+  paymentMethod: z.enum(["credit_card", "debit_card", "paypal", "pix", "free"]),
   cardNumber: z.string().optional(),
   cardExpiry: z.string().optional(),
   cardCVC: z.string().optional(),
@@ -75,7 +75,7 @@ export const PaymentForm = ({
         body: {
           appointmentId,
           paymentMethod: values.paymentMethod,
-          amount: examPrice,
+          amount: values.paymentMethod === "free" ? 0 : examPrice,
           userId: user.id,
         },
       });
@@ -83,16 +83,18 @@ export const PaymentForm = ({
       if (error) throw error;
 
       toast({
-        title: "Payment Successful",
-        description: "Your payment has been processed successfully",
+        title: values.paymentMethod === "free" ? "Exam Released" : "Payment Successful",
+        description: values.paymentMethod === "free" 
+          ? "Your exam has been released for free" 
+          : "Your payment has been processed successfully",
       });
 
       onPaymentSuccess(data.payment);
     } catch (error: any) {
       console.error("Payment processing error:", error);
       toast({
-        title: "Payment Failed",
-        description: error.message || "An error occurred while processing your payment",
+        title: values.paymentMethod === "free" ? "Exam Release Failed" : "Payment Failed",
+        description: error.message || "An error occurred while processing your request",
         variant: "destructive",
       });
     } finally {
@@ -156,6 +158,15 @@ export const PaymentForm = ({
                       <FormLabel className="font-normal flex items-center gap-2">
                         <Banknote size={18} />
                         Pix
+                      </FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="free" />
+                      </FormControl>
+                      <FormLabel className="font-normal flex items-center gap-2">
+                        <Gift size={18} />
+                        Free
                       </FormLabel>
                     </FormItem>
                   </RadioGroup>
@@ -264,12 +275,21 @@ export const PaymentForm = ({
             </div>
           )}
 
+          {paymentMethod === "free" && (
+            <div className="py-4 text-center">
+              <p className="mb-4">This exam will be processed free of charge</p>
+              <div className="bg-green-100 p-4 rounded-lg mb-4">
+                <span className="text-green-700">No payment required</span>
+              </div>
+            </div>
+          )}
+
           <Button 
             type="submit" 
             className="w-full mt-6" 
             disabled={isProcessing}
           >
-            {isProcessing ? "Processing..." : `Pay $${examPrice.toFixed(2)}`}
+            {isProcessing ? "Processing..." : paymentMethod === "free" ? "Release Exam for Free" : `Pay $${examPrice.toFixed(2)}`}
           </Button>
         </form>
       </Form>

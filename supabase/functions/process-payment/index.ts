@@ -18,6 +18,12 @@ const corsHeaders = {
 async function generateInvoice(payment: any, appointmentDetails: any, userProfile: any) {
   // For now, we'll just create a simple invoice URL with the payment ID
   // In a real app, you would generate a PDF or HTML invoice and store it
+  
+  // For free payments, we don't generate an invoice
+  if (payment.payment_method === "free") {
+    return null;
+  }
+  
   const invoiceUrl = `${supabaseUrl}/storage/v1/object/public/invoices/${payment.id}.html`;
   
   console.log(`Generated invoice URL: ${invoiceUrl}`);
@@ -26,6 +32,33 @@ async function generateInvoice(payment: any, appointmentDetails: any, userProfil
 
 async function sendPaymentConfirmationEmail(userEmail: string, userName: string, paymentDetails: any, appointmentDetails: any) {
   try {
+    const isFree = paymentDetails.payment_method === "free";
+    const emailSubject = isFree ? "Exam Released - MediBook" : "Payment Confirmation - MediBook";
+    
+    const emailContent = `
+      <h1>${isFree ? 'Exam Released' : 'Payment Confirmed'}</h1>
+      <p>Dear ${userName},</p>
+      <p>${isFree ? 'Your exam has been released for free.' : `Thank you for your payment of $${paymentDetails.amount} for your medical exam.`}</p>
+      <h2>Appointment Details:</h2>
+      <ul>
+        <li>Exam: ${appointmentDetails.exam_name}</li>
+        <li>Laboratory: ${appointmentDetails.laboratory_name}</li>
+        <li>Date: ${appointmentDetails.appointment_date}</li>
+        <li>Time: ${appointmentDetails.appointment_time}</li>
+      </ul>
+      ${!isFree ? `
+      <h2>Payment Details:</h2>
+      <ul>
+        <li>Amount: $${paymentDetails.amount}</li>
+        <li>Payment Method: ${paymentDetails.payment_method}</li>
+        <li>Transaction ID: ${paymentDetails.transaction_id || 'N/A'}</li>
+        <li>Payment Date: ${new Date(paymentDetails.payment_date).toLocaleString()}</li>
+      </ul>
+      ${paymentDetails.invoice_url ? `<p>You can view your invoice by clicking <a href="${paymentDetails.invoice_url}">here</a>.</p>` : ''}
+      ` : ''}
+      <p>Thank you for choosing MediBook for your medical exams.</p>
+    `;
+    
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -35,28 +68,8 @@ async function sendPaymentConfirmationEmail(userEmail: string, userName: string,
       body: JSON.stringify({
         from: "MediBook <no-reply@resend.dev>",
         to: userEmail,
-        subject: "Payment Confirmation - MediBook",
-        html: `
-          <h1>Payment Confirmed</h1>
-          <p>Dear ${userName},</p>
-          <p>Thank you for your payment of $${paymentDetails.amount} for your medical exam.</p>
-          <h2>Appointment Details:</h2>
-          <ul>
-            <li>Exam: ${appointmentDetails.exam_name}</li>
-            <li>Laboratory: ${appointmentDetails.laboratory_name}</li>
-            <li>Date: ${appointmentDetails.appointment_date}</li>
-            <li>Time: ${appointmentDetails.appointment_time}</li>
-          </ul>
-          <h2>Payment Details:</h2>
-          <ul>
-            <li>Amount: $${paymentDetails.amount}</li>
-            <li>Payment Method: ${paymentDetails.payment_method}</li>
-            <li>Transaction ID: ${paymentDetails.transaction_id || 'N/A'}</li>
-            <li>Payment Date: ${new Date(paymentDetails.payment_date).toLocaleString()}</li>
-          </ul>
-          <p>You can view your invoice by clicking <a href="${paymentDetails.invoice_url}">here</a>.</p>
-          <p>Thank you for choosing MediBook for your medical exams.</p>
-        `,
+        subject: emailSubject,
+        html: emailContent,
       }),
     });
 
@@ -144,7 +157,7 @@ serve(async (req) => {
       throw paymentError;
     }
 
-    // 5. Generate invoice
+    // 5. Generate invoice (only for paid exams)
     const appointmentDetails = {
       appointment_date: appointmentData.appointment_date,
       appointment_time: appointmentData.appointment_time,
@@ -154,15 +167,17 @@ serve(async (req) => {
 
     const invoiceUrl = await generateInvoice(paymentData, appointmentDetails, userProfile);
 
-    // 6. Update payment with invoice URL
-    const { error: updateError } = await supabase
-      .from("payments")
-      .update({ invoice_url: invoiceUrl })
-      .eq("id", paymentData.id);
+    // 6. Update payment with invoice URL (if not free)
+    if (invoiceUrl) {
+      const { error: updateError } = await supabase
+        .from("payments")
+        .update({ invoice_url: invoiceUrl })
+        .eq("id", paymentData.id);
 
-    if (updateError) {
-      console.error("Error updating payment with invoice:", updateError);
-      throw updateError;
+      if (updateError) {
+        console.error("Error updating payment with invoice:", updateError);
+        throw updateError;
+      }
     }
 
     // 7. Send confirmation email
@@ -177,7 +192,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Payment processed successfully",
+        message: paymentMethod === "free" ? "Exam released successfully" : "Payment processed successfully",
         payment: { ...paymentData, invoice_url: invoiceUrl },
       }),
       {
