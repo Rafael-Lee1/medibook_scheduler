@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
@@ -19,7 +18,7 @@ const Schedule = () => {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
-  const [schedulingStep, setSchedulingStep] = useState<"date-time" | "payment" | "confirmation">("date-time");
+  const [schedulingStep, setSchedulingStep] = useState<"date-time" | "confirmation">("date-time");
   const [appointmentId, setAppointmentId] = useState<string>();
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
 

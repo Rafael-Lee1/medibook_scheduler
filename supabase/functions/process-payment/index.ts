@@ -15,30 +15,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function generateInvoice(payment: any, appointmentDetails: any, userProfile: any) {
-  // For now, we'll just create a simple invoice URL with the payment ID
-  // In a real app, you would generate a PDF or HTML invoice and store it
-  
-  // For free payments, we don't generate an invoice
-  if (payment.payment_method === "free") {
-    return null;
-  }
-  
-  const invoiceUrl = `${supabaseUrl}/storage/v1/object/public/invoices/${payment.id}.html`;
-  
-  console.log(`Generated invoice URL: ${invoiceUrl}`);
-  return invoiceUrl;
-}
-
-async function sendPaymentConfirmationEmail(userEmail: string, userName: string, paymentDetails: any, appointmentDetails: any) {
+async function sendAppointmentConfirmationEmail(userEmail: string, userName: string, appointmentDetails: any) {
   try {
-    const isFree = paymentDetails.payment_method === "free";
-    const emailSubject = isFree ? "Exam Released - MediBook" : "Payment Confirmation - MediBook";
+    const emailSubject = "Your Exam Appointment Confirmation - MediBook";
     
     const emailContent = `
-      <h1>${isFree ? 'Exam Released' : 'Payment Confirmed'}</h1>
+      <h1>Appointment Confirmation</h1>
       <p>Dear ${userName},</p>
-      <p>${isFree ? 'Your exam has been released for free.' : `Thank you for your payment of $${paymentDetails.amount} for your medical exam.`}</p>
+      <p>Thank you for scheduling your medical exam with MediBook.</p>
       <h2>Appointment Details:</h2>
       <ul>
         <li>Exam: ${appointmentDetails.exam_name}</li>
@@ -46,16 +30,7 @@ async function sendPaymentConfirmationEmail(userEmail: string, userName: string,
         <li>Date: ${appointmentDetails.appointment_date}</li>
         <li>Time: ${appointmentDetails.appointment_time}</li>
       </ul>
-      ${!isFree ? `
-      <h2>Payment Details:</h2>
-      <ul>
-        <li>Amount: $${paymentDetails.amount}</li>
-        <li>Payment Method: ${paymentDetails.payment_method}</li>
-        <li>Transaction ID: ${paymentDetails.transaction_id || 'N/A'}</li>
-        <li>Payment Date: ${new Date(paymentDetails.payment_date).toLocaleString()}</li>
-      </ul>
-      ${paymentDetails.invoice_url ? `<p>You can view your invoice by clicking <a href="${paymentDetails.invoice_url}">here</a>.</p>` : ''}
-      ` : ''}
+      <p>No payment is required for this appointment.</p>
       <p>Thank you for choosing MediBook for your medical exams.</p>
     `;
     
@@ -86,7 +61,7 @@ async function sendPaymentConfirmationEmail(userEmail: string, userName: string,
     console.log("Email sent successfully:", responseData);
     return responseData;
   } catch (error) {
-    console.error("Error in sendPaymentConfirmationEmail:", error);
+    console.error("Error in sendAppointmentConfirmationEmail:", error);
     throw error;
   }
 }
@@ -101,10 +76,9 @@ serve(async (req) => {
 
   try {
     const requestData = await req.json();
-    const { appointmentId, paymentMethod, amount, userId } = requestData;
+    const { appointmentId, userId } = requestData;
 
-    console.log(`Processing payment for appointment ${appointmentId}`);
-    console.log(`Payment method: ${paymentMethod}, Amount: ${amount}`);
+    console.log(`Processing appointment ${appointmentId}`);
 
     // 1. Get appointment details
     const { data: appointmentData, error: appointmentError } = await supabase
@@ -142,17 +116,17 @@ serve(async (req) => {
 
     console.log("User profile:", userProfile);
 
-    // 3. Generate a transaction ID (in real app, this would come from payment processor)
+    // 3. Generate a transaction ID for reference
     const transactionId = `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // 4. Create payment record
+    // 4. Create payment record (free)
     const { data: paymentData, error: paymentError } = await supabase
       .from("payments")
       .insert({
         user_id: userId,
         appointment_id: appointmentId,
-        amount: amount,
-        payment_method: paymentMethod,
+        amount: 0,
+        payment_method: "free",
         payment_status: "completed",
         transaction_id: transactionId,
         payment_date: new Date().toISOString(),
@@ -161,13 +135,13 @@ serve(async (req) => {
       .single();
 
     if (paymentError) {
-      console.error("Error creating payment:", paymentError);
+      console.error("Error creating payment record:", paymentError);
       throw paymentError;
     }
 
-    console.log("Payment created:", paymentData);
+    console.log("Payment record created:", paymentData);
 
-    // 5. Generate invoice (only for paid exams)
+    // 5. Prepare appointment details for email
     const appointmentDetails = {
       appointment_date: appointmentData.appointment_date,
       appointment_time: appointmentData.appointment_time,
@@ -177,40 +151,24 @@ serve(async (req) => {
 
     console.log("Appointment details:", appointmentDetails);
 
-    const invoiceUrl = await generateInvoice(paymentData, appointmentDetails, userProfile);
-
-    // 6. Update payment with invoice URL (if not free)
-    if (invoiceUrl) {
-      const { error: updateError } = await supabase
-        .from("payments")
-        .update({ invoice_url: invoiceUrl })
-        .eq("id", paymentData.id);
-
-      if (updateError) {
-        console.error("Error updating payment with invoice:", updateError);
-        throw updateError;
-      }
-    }
-
-    // 7. Send confirmation email
+    // 6. Send confirmation email
     if (!userProfile.email) {
       console.warn("User email is missing, cannot send confirmation email");
     } else {
       console.log("Sending confirmation email to:", userProfile.email);
-      await sendPaymentConfirmationEmail(
+      await sendAppointmentConfirmationEmail(
         userProfile.email,
         userProfile.full_name || "Valued Patient",
-        { ...paymentData, invoice_url: invoiceUrl },
         appointmentDetails
       );
     }
 
-    // 8. Return success response
+    // 7. Return success response
     return new Response(
       JSON.stringify({
         success: true,
-        message: paymentMethod === "free" ? "Exam released successfully" : "Payment processed successfully",
-        payment: { ...paymentData, invoice_url: invoiceUrl },
+        message: "Appointment confirmed successfully",
+        payment: paymentData,
       }),
       {
         headers: {
@@ -220,11 +178,11 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error processing payment:", error);
+    console.error("Error processing appointment:", error);
     return new Response(
       JSON.stringify({
         success: false,
-        message: error.message || "An error occurred while processing payment",
+        message: error.message || "An error occurred while processing appointment",
       }),
       {
         status: 400,

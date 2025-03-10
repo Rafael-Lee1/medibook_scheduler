@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { DateTimeSelection } from "./steps/DateTimeSelection";
-import { PaymentStep } from "./steps/PaymentStep";
 import { ConfirmationStep } from "./steps/ConfirmationStep";
 
 interface SchedulingStepsProps {
@@ -12,8 +11,8 @@ interface SchedulingStepsProps {
   existingAppointments: string[];
   examDetails: any;
   user: any;
-  schedulingStep: "date-time" | "payment" | "confirmation";
-  setSchedulingStep: (step: "date-time" | "payment" | "confirmation") => void;
+  schedulingStep: "date-time" | "confirmation";
+  setSchedulingStep: (step: "date-time" | "confirmation") => void;
   appointmentId: string | undefined;
   setAppointmentId: (id: string) => void;
   paymentDetails: any;
@@ -35,14 +34,28 @@ export const SchedulingSteps = ({
   paymentDetails,
   setPaymentDetails,
 }: SchedulingStepsProps) => {
-  const handleAppointmentCreated = (newAppointmentId: string) => {
+  const handleAppointmentCreated = async (newAppointmentId: string) => {
     setAppointmentId(newAppointmentId);
-    setSchedulingStep("payment");
-  };
-
-  const handlePaymentSuccess = (paymentData: any) => {
-    setPaymentDetails(paymentData);
-    setSchedulingStep("confirmation");
+    
+    // Process the booking directly without payment step
+    try {
+      const { data: supabaseResponse } = await fetch("https://dxnzcvjyqghisjmmmiwl.supabase.co/functions/v1/process-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("supabase.auth.token")}`,
+        },
+        body: JSON.stringify({
+          appointmentId: newAppointmentId,
+          userId: user.id,
+        }),
+      }).then(res => res.json());
+      
+      setPaymentDetails(supabaseResponse.payment);
+      setSchedulingStep("confirmation");
+    } catch (error) {
+      console.error("Error processing appointment:", error);
+    }
   };
 
   if (schedulingStep === "date-time") {
@@ -56,16 +69,6 @@ export const SchedulingSteps = ({
         examDetails={examDetails}
         user={user}
         onProceed={handleAppointmentCreated}
-      />
-    );
-  }
-
-  if (schedulingStep === "payment" && examDetails && appointmentId) {
-    return (
-      <PaymentStep
-        appointmentId={appointmentId}
-        examDetails={examDetails}
-        onPaymentSuccess={handlePaymentSuccess}
       />
     );
   }
