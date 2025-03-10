@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreditCard, Wallet, Banknote, Check, DollarSign } from "lucide-react";
+import { CreditCard, PaymentIcon, Banknote, Wallet, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -69,6 +70,7 @@ export const PaymentForm = ({
     try {
       setIsProcessing(true);
 
+      // Call the Supabase Edge Function to process payment
       const { data, error } = await supabase.functions.invoke("process-payment", {
         body: {
           appointmentId,
