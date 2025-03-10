@@ -1,7 +1,7 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   Table,
@@ -16,10 +16,18 @@ import { Card } from "@/components/ui/card";
 import NavBar from "@/components/NavBar";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { CalendarClock, XCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { CancelExamDialog } from "@/components/exams/CancelExamDialog";
+import { RescheduleExamDialog } from "@/components/exams/RescheduleExamDialog";
 
 const MyExams = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [examToCancel, setExamToCancel] = useState<any>(null);
+  const [examToReschedule, setExamToReschedule] = useState<any>(null);
 
   useEffect(() => {
     if (!user) {
@@ -65,6 +73,24 @@ const MyExams = () => {
     enabled: !!user,
   });
 
+  const handleRescheduleSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["my-appointments"] });
+    toast({
+      title: "Appointment Rescheduled",
+      description: "Your exam has been successfully rescheduled.",
+    });
+    setExamToReschedule(null);
+  };
+
+  const handleCancelSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["my-appointments"] });
+    toast({
+      title: "Appointment Cancelled",
+      description: "Your exam has been successfully cancelled.",
+    });
+    setExamToCancel(null);
+  };
+
   if (!user) {
     return null;
   }
@@ -96,6 +122,7 @@ const MyExams = () => {
                   <TableHead>Time</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Price</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -120,10 +147,48 @@ const MyExams = () => {
                       {format(new Date(`2000-01-01T${appointment.appointment_time}`), "h:mm a")}
                     </TableCell>
                     <TableCell>
-                      <span className="capitalize">{appointment.status}</span>
+                      <span 
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          appointment.status === "scheduled" 
+                            ? "bg-green-100 text-green-800" 
+                            : appointment.status === "canceled" 
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                      </span>
                     </TableCell>
                     <TableCell>
                       ${appointment.laboratory_exams.exams.price.toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      {appointment.status === "scheduled" && (
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-1"
+                            onClick={() => setExamToReschedule(appointment)}
+                          >
+                            <CalendarClock className="h-4 w-4" />
+                            <span className="sr-only md:not-sr-only md:inline-block">
+                              Reschedule
+                            </span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-1 text-destructive border-destructive hover:bg-destructive/10"
+                            onClick={() => setExamToCancel(appointment)}
+                          >
+                            <XCircle className="h-4 w-4" />
+                            <span className="sr-only md:not-sr-only md:inline-block">
+                              Cancel
+                            </span>
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -132,6 +197,24 @@ const MyExams = () => {
           )}
         </Card>
       </main>
+
+      {examToCancel && (
+        <CancelExamDialog
+          open={!!examToCancel}
+          onOpenChange={(open) => !open && setExamToCancel(null)}
+          appointment={examToCancel}
+          onSuccess={handleCancelSuccess}
+        />
+      )}
+
+      {examToReschedule && (
+        <RescheduleExamDialog
+          open={!!examToReschedule}
+          onOpenChange={(open) => !open && setExamToReschedule(null)}
+          appointment={examToReschedule}
+          onSuccess={handleRescheduleSuccess}
+        />
+      )}
     </div>
   );
 };

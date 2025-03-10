@@ -17,6 +17,7 @@ interface AppointmentEmailRequest {
   laboratoryName: string;
   appointmentDate: string;
   appointmentTime: string;
+  notificationType?: "confirmation" | "reschedule" | "cancellation";
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -35,6 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
       laboratoryName,
       appointmentDate,
       appointmentTime,
+      notificationType = "confirmation"
     }: AppointmentEmailRequest = await req.json();
 
     console.log("Attempting to send email to:", userEmail);
@@ -44,26 +46,71 @@ const handler = async (req: Request): Promise<Response> => {
       laboratoryName,
       appointmentDate,
       appointmentTime,
+      notificationType
     });
+
+    let subject = "Your MediBook Appointment Confirmation";
+    let html = "";
+
+    switch(notificationType) {
+      case "confirmation":
+        subject = "Your MediBook Appointment Confirmation";
+        html = `
+          <h1>Appointment Confirmation</h1>
+          <p>Dear ${userName},</p>
+          <p>Your appointment has been successfully scheduled!</p>
+          <h2>Appointment Details:</h2>
+          <ul>
+            <li>Exam: ${examName}</li>
+            <li>Laboratory: ${laboratoryName}</li>
+            <li>Date: ${appointmentDate}</li>
+            <li>Time: ${appointmentTime}</li>
+          </ul>
+          <p>If you need to reschedule or cancel your appointment, please visit your profile page.</p>
+          <p>Best regards,<br>The MediBook Team</p>
+        `;
+        break;
+      case "reschedule":
+        subject = "Your MediBook Appointment Has Been Rescheduled";
+        html = `
+          <h1>Appointment Rescheduled</h1>
+          <p>Dear ${userName},</p>
+          <p>Your appointment has been successfully rescheduled!</p>
+          <h2>New Appointment Details:</h2>
+          <ul>
+            <li>Exam: ${examName}</li>
+            <li>Laboratory: ${laboratoryName}</li>
+            <li>Date: ${appointmentDate}</li>
+            <li>Time: ${appointmentTime}</li>
+          </ul>
+          <p>If you need to make further changes to your appointment, please visit your profile page.</p>
+          <p>Best regards,<br>The MediBook Team</p>
+        `;
+        break;
+      case "cancellation":
+        subject = "Your MediBook Appointment Has Been Cancelled";
+        html = `
+          <h1>Appointment Cancellation</h1>
+          <p>Dear ${userName},</p>
+          <p>Your appointment has been successfully cancelled.</p>
+          <h2>Cancelled Appointment Details:</h2>
+          <ul>
+            <li>Exam: ${examName}</li>
+            <li>Laboratory: ${laboratoryName}</li>
+            <li>Date: ${appointmentDate}</li>
+            <li>Time: ${appointmentTime}</li>
+          </ul>
+          <p>If you wish to schedule a new appointment, please visit our website.</p>
+          <p>Best regards,<br>The MediBook Team</p>
+        `;
+        break;
+    }
 
     const emailResponse = await resend.emails.send({
       from: "MediBook <appointments@medibook.website>",
       to: [userEmail],
-      subject: "Your MediBook Appointment Confirmation",
-      html: `
-        <h1>Appointment Confirmation</h1>
-        <p>Dear ${userName},</p>
-        <p>Your appointment has been successfully scheduled!</p>
-        <h2>Appointment Details:</h2>
-        <ul>
-          <li>Exam: ${examName}</li>
-          <li>Laboratory: ${laboratoryName}</li>
-          <li>Date: ${appointmentDate}</li>
-          <li>Time: ${appointmentTime}</li>
-        </ul>
-        <p>If you need to reschedule or cancel your appointment, please visit your profile page.</p>
-        <p>Best regards,<br>The MediBook Team</p>
-      `,
+      subject: subject,
+      html: html,
     });
 
     console.log("Email sent successfully:", emailResponse);
