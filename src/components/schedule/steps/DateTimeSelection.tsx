@@ -92,7 +92,7 @@ export const DateTimeSelection = ({
           onClick={handleSchedule}
           disabled={!selectedDate || !selectedTime || isProcessing}
         >
-          {isProcessing ? "Processing..." : "Proceed to Payment"}
+          {isProcessing ? "Processing..." : "Confirmar Agendamento"}
         </Button>
       </div>
     </>
