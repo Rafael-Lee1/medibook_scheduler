@@ -24,8 +24,66 @@ async function generateInvoice(payment: any, appointmentDetails: any, userProfil
   return invoiceUrl;
 }
 
-async function sendPaymentConfirmationEmail(userEmail: string, userName: string, paymentDetails: any, appointmentDetails: any) {
+async function sendPaymentEmail(
+  userEmail: string, 
+  userName: string, 
+  paymentDetails: any, 
+  appointmentDetails: any, 
+  success: boolean
+) {
   try {
+    const subject = success 
+      ? `Payment Confirmation - ${appointmentDetails.exam_name}`
+      : `Payment Attempt - ${appointmentDetails.exam_name}`;
+
+    let emailContent = '';
+    if (success) {
+      emailContent = `
+        <h1>Payment Confirmed</h1>
+        <p>Dear ${userName},</p>
+        <p>Thank you for your payment of $${paymentDetails.amount} for your medical exam.</p>
+        <h2>Appointment Details:</h2>
+        <ul>
+          <li>Exam: ${appointmentDetails.exam_name}</li>
+          <li>Laboratory: ${appointmentDetails.laboratory_name}</li>
+          <li>Date: ${appointmentDetails.appointment_date}</li>
+          <li>Time: ${appointmentDetails.appointment_time}</li>
+        </ul>
+        <h2>Payment Details:</h2>
+        <ul>
+          <li>Amount: $${paymentDetails.amount}</li>
+          <li>Payment Method: ${paymentDetails.payment_method}</li>
+          <li>Transaction ID: ${paymentDetails.transaction_id || 'N/A'}</li>
+          <li>Payment Date: ${new Date(paymentDetails.payment_date).toLocaleString()}</li>
+        </ul>
+        <p>You can view your invoice by clicking <a href="${paymentDetails.invoice_url}">here</a>.</p>
+        <p>Thank you for choosing MediBook for your medical exams.</p>
+      `;
+    } else {
+      emailContent = `
+        <h1>Payment Attempted</h1>
+        <p>Dear ${userName},</p>
+        <p>Thank you for your attempt to book a medical exam with MediBook.</p>
+        <p>We noticed that your payment of $${paymentDetails.amount} was not completed successfully.</p>
+        <h2>Exam Details:</h2>
+        <ul>
+          <li>Exam: ${appointmentDetails.exam_name}</li>
+          <li>Laboratory: ${appointmentDetails.laboratory_name}</li>
+          <li>Date: ${appointmentDetails.appointment_date}</li>
+          <li>Time: ${appointmentDetails.appointment_time}</li>
+        </ul>
+        <h2>What to do next:</h2>
+        <p>Since this is a demo website, you can:</p>
+        <ul>
+          <li>Try the payment again with a different payment method</li>
+          <li>Return to the scheduling page to select a different appointment time</li>
+          <li>Contact our support team at support@medibook.demo for assistance</li>
+        </ul>
+        <p>Your booking is not complete until the payment is successfully processed.</p>
+        <p>Thank you for your understanding and for trying MediBook for your medical exams.</p>
+      `;
+    }
+
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -35,28 +93,8 @@ async function sendPaymentConfirmationEmail(userEmail: string, userName: string,
       body: JSON.stringify({
         from: "MediBook <no-reply@resend.dev>",
         to: userEmail,
-        subject: "Payment Confirmation - MediBook",
-        html: `
-          <h1>Payment Confirmed</h1>
-          <p>Dear ${userName},</p>
-          <p>Thank you for your payment of $${paymentDetails.amount} for your medical exam.</p>
-          <h2>Appointment Details:</h2>
-          <ul>
-            <li>Exam: ${appointmentDetails.exam_name}</li>
-            <li>Laboratory: ${appointmentDetails.laboratory_name}</li>
-            <li>Date: ${appointmentDetails.appointment_date}</li>
-            <li>Time: ${appointmentDetails.appointment_time}</li>
-          </ul>
-          <h2>Payment Details:</h2>
-          <ul>
-            <li>Amount: $${paymentDetails.amount}</li>
-            <li>Payment Method: ${paymentDetails.payment_method}</li>
-            <li>Transaction ID: ${paymentDetails.transaction_id || 'N/A'}</li>
-            <li>Payment Date: ${new Date(paymentDetails.payment_date).toLocaleString()}</li>
-          </ul>
-          <p>You can view your invoice by clicking <a href="${paymentDetails.invoice_url}">here</a>.</p>
-          <p>Thank you for choosing MediBook for your medical exams.</p>
-        `,
+        subject: subject,
+        html: emailContent,
       }),
     });
 
@@ -68,7 +106,7 @@ async function sendPaymentConfirmationEmail(userEmail: string, userName: string,
 
     return await response.json();
   } catch (error) {
-    console.error("Error in sendPaymentConfirmationEmail:", error);
+    console.error("Error in sendPaymentEmail:", error);
     throw error;
   }
 }
@@ -121,30 +159,6 @@ serve(async (req) => {
       throw userError;
     }
 
-    // 3. Generate a transaction ID (in real app, this would come from payment processor)
-    const transactionId = `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // 4. Create payment record
-    const { data: paymentData, error: paymentError } = await supabase
-      .from("payments")
-      .insert({
-        user_id: userId,
-        appointment_id: appointmentId,
-        amount: amount,
-        payment_method: paymentMethod,
-        payment_status: "completed",
-        transaction_id: transactionId,
-        payment_date: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (paymentError) {
-      console.error("Error creating payment:", paymentError);
-      throw paymentError;
-    }
-
-    // 5. Generate invoice
     const appointmentDetails = {
       appointment_date: appointmentData.appointment_date,
       appointment_time: appointmentData.appointment_time,
@@ -152,43 +166,171 @@ serve(async (req) => {
       laboratory_name: appointmentData.laboratory_exams.laboratories.name,
     };
 
-    const invoiceUrl = await generateInvoice(paymentData, appointmentDetails, userProfile);
+    // Simulate a payment success or failure (for demo purposes)
+    // In a real app, this would be determined by a payment processor
+    let paymentSuccess = true;
+    
+    // For demo purposes, we'll randomly fail some payments (approx 20% failure rate)
+    // Comment this out if you want all payments to succeed
+    paymentSuccess = Math.random() > 0.2;
 
-    // 6. Update payment with invoice URL
-    const { error: updateError } = await supabase
-      .from("payments")
-      .update({ invoice_url: invoiceUrl })
-      .eq("id", paymentData.id);
+    // 3. Generate a transaction ID (in real app, this would come from payment processor)
+    const transactionId = `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    if (updateError) {
-      console.error("Error updating payment with invoice:", updateError);
-      throw updateError;
+    let paymentData;
+    let invoiceUrl = '';
+    
+    if (paymentSuccess) {
+      // 4. Create payment record for successful payment
+      const { data: createdPayment, error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+          user_id: userId,
+          appointment_id: appointmentId,
+          amount: amount,
+          payment_method: paymentMethod,
+          payment_status: "completed",
+          transaction_id: transactionId,
+          payment_date: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (paymentError) {
+        console.error("Error creating payment:", paymentError);
+        throw paymentError;
+      }
+
+      paymentData = createdPayment;
+
+      // 5. Generate invoice for successful payment
+      invoiceUrl = await generateInvoice(paymentData, appointmentDetails, userProfile);
+
+      // 6. Update payment with invoice URL
+      const { error: updateError } = await supabase
+        .from("payments")
+        .update({ invoice_url: invoiceUrl })
+        .eq("id", paymentData.id);
+
+      if (updateError) {
+        console.error("Error updating payment with invoice:", updateError);
+        throw updateError;
+      }
+      
+      // Update with invoice URL
+      paymentData.invoice_url = invoiceUrl;
+    } else {
+      // For failed payments, we'll create a record with status "failed"
+      const { data: failedPayment, error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+          user_id: userId,
+          appointment_id: appointmentId,
+          amount: amount,
+          payment_method: paymentMethod,
+          payment_status: "failed",
+          transaction_id: transactionId,
+          payment_date: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (paymentError) {
+        console.error("Error creating failed payment record:", paymentError);
+        throw paymentError;
+      }
+
+      paymentData = failedPayment;
     }
 
-    // 7. Send confirmation email
-    await sendPaymentConfirmationEmail(
+    // 7. Send confirmation email (for both successful and failed payments)
+    await sendPaymentEmail(
       userProfile.email || "",
       userProfile.full_name || "Valued Patient",
-      { ...paymentData, invoice_url: invoiceUrl },
-      appointmentDetails
+      paymentData,
+      appointmentDetails,
+      paymentSuccess
     );
 
-    // 8. Return success response
+    // 8. Return response
     return new Response(
       JSON.stringify({
-        success: true,
-        message: "Payment processed successfully",
-        payment: { ...paymentData, invoice_url: invoiceUrl },
+        success: paymentSuccess,
+        message: paymentSuccess 
+          ? "Payment processed successfully" 
+          : "Payment processing failed",
+        payment: paymentData,
       }),
       {
         headers: {
           "Content-Type": "application/json",
           ...corsHeaders,
         },
+        status: paymentSuccess ? 200 : 400,
       }
     );
   } catch (error) {
     console.error("Error processing payment:", error);
+    
+    // Try to extract user and appointment details to send a failure email
+    // This is a best-effort attempt, so we catch any errors to avoid breaking the main error flow
+    try {
+      const requestData = await req.json();
+      const { appointmentId, amount, userId } = requestData;
+      
+      // Get user profile
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .eq("id", userId)
+        .single();
+        
+      // Get appointment details
+      const { data: appointmentData } = await supabase
+        .from("appointments")
+        .select(`
+          id,
+          appointment_date,
+          appointment_time,
+          laboratory_exam_id,
+          laboratory_exams (
+            id,
+            laboratories (id, name),
+            exams (id, name, price)
+          )
+        `)
+        .eq("id", appointmentId)
+        .single();
+        
+      if (userProfile && appointmentData) {
+        const appointmentDetails = {
+          appointment_date: appointmentData.appointment_date,
+          appointment_time: appointmentData.appointment_time,
+          exam_name: appointmentData.laboratory_exams.exams.name,
+          laboratory_name: appointmentData.laboratory_exams.laboratories.name,
+        };
+        
+        const paymentDetails = {
+          amount: amount,
+          payment_method: "unknown",
+          transaction_id: "failed",
+          payment_date: new Date().toISOString(),
+        };
+        
+        // Send failure email
+        await sendPaymentEmail(
+          userProfile.email,
+          userProfile.full_name || "Valued Patient",
+          paymentDetails,
+          appointmentDetails,
+          false
+        );
+      }
+    } catch (emailError) {
+      console.error("Failed to send error notification email:", emailError);
+      // We don't throw here because we still want to return the main error response
+    }
+    
     return new Response(
       JSON.stringify({
         success: false,

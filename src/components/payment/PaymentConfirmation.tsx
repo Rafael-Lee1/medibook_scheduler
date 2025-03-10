@@ -1,5 +1,5 @@
 
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ interface PaymentConfirmationProps {
     id: string;
     amount: number;
     payment_method: string;
+    payment_status?: string;
     transaction_id: string;
     invoice_url?: string;
   };
@@ -25,6 +26,7 @@ export const PaymentConfirmation = ({
   appointmentDetails,
 }: PaymentConfirmationProps) => {
   const navigate = useNavigate();
+  const isPaymentSuccessful = paymentDetails.payment_status !== "failed";
 
   const formatPaymentMethod = (method: string) => {
     switch (method) {
@@ -45,11 +47,19 @@ export const PaymentConfirmation = ({
     <Card className="p-6 max-w-xl mx-auto">
       <div className="text-center mb-6">
         <div className="flex justify-center mb-4">
-          <CheckCircle className="h-16 w-16 text-green-500" />
+          {isPaymentSuccessful ? (
+            <CheckCircle className="h-16 w-16 text-green-500" />
+          ) : (
+            <AlertTriangle className="h-16 w-16 text-amber-500" />
+          )}
         </div>
-        <h1 className="text-2xl font-bold mb-2">Payment Successful!</h1>
+        <h1 className="text-2xl font-bold mb-2">
+          {isPaymentSuccessful ? "Payment Successful!" : "Payment Processing"}
+        </h1>
         <p className="text-muted-foreground">
-          Your payment has been processed successfully.
+          {isPaymentSuccessful 
+            ? "Your payment has been processed successfully."
+            : "Your payment is being processed. Since this is a demo, you can continue."}
         </p>
       </div>
 
@@ -91,6 +101,12 @@ export const PaymentConfirmation = ({
                 <dd className="font-medium">{formatPaymentMethod(paymentDetails.payment_method)}</dd>
               </div>
               <div>
+                <dt className="text-sm text-muted-foreground">Status</dt>
+                <dd className={`font-medium ${isPaymentSuccessful ? 'text-green-600' : 'text-amber-600'}`}>
+                  {isPaymentSuccessful ? 'Completed' : 'Processing'}
+                </dd>
+              </div>
+              <div>
                 <dt className="text-sm text-muted-foreground">Transaction ID</dt>
                 <dd className="font-medium truncate">{paymentDetails.transaction_id}</dd>
               </div>
@@ -102,8 +118,19 @@ export const PaymentConfirmation = ({
           </div>
         </div>
 
+        {!isPaymentSuccessful && (
+          <div className="bg-amber-50 border border-amber-200 p-4 rounded-md">
+            <h4 className="font-medium text-amber-800 mb-1">Note about this demo</h4>
+            <p className="text-amber-700 text-sm">
+              In a real application, you would be redirected to try payment again. Since this is a demo, 
+              we're allowing you to continue with the booking process even though the payment wasn't successful.
+              A confirmation email has been sent with instructions.
+            </p>
+          </div>
+        )}
+
         <div className="text-center space-y-3 pt-3">
-          {paymentDetails.invoice_url && (
+          {isPaymentSuccessful && paymentDetails.invoice_url && (
             <Button
               variant="outline"
               className="w-full"
