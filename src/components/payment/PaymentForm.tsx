@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreditCard, Banknote, Wallet, Check } from "lucide-react";
+import { CreditCard, PaymentIcon, Banknote, Wallet, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -81,43 +82,18 @@ export const PaymentForm = ({
 
       if (error) throw error;
 
-      // Check if payment was successful
-      if (data.success) {
-        toast({
-          title: "Payment Successful",
-          description: "Your payment has been processed successfully",
-        });
-        
-        onPaymentSuccess(data.payment);
-      } else {
-        // Handle failed payment but still allow the user to continue
-        // This is for demo purposes
-        toast({
-          title: "Payment Failed",
-          description: "Your payment couldn't be processed. However, since this is a demo, you can continue reviewing the booking details.",
-          variant: "destructive",
-        });
-        
-        // Even though payment failed, we still call onPaymentSuccess to move to the confirmation page
-        // This is for demo purposes only - in a real app, you would redirect to an error page or retry payment
-        onPaymentSuccess(data.payment);
-      }
+      toast({
+        title: "Payment Successful",
+        description: "Your payment has been processed successfully",
+      });
+
+      onPaymentSuccess(data.payment);
     } catch (error: any) {
       console.error("Payment processing error:", error);
       toast({
         title: "Payment Failed",
-        description: error.message || "An error occurred while processing your payment. Since this is a demo, you can still proceed.",
+        description: error.message || "An error occurred while processing your payment",
         variant: "destructive",
-      });
-      
-      // For the demo, we'll still call onPaymentSuccess with basic payment details
-      // This allows the user to continue through the flow even if there's an error
-      onPaymentSuccess({
-        id: "demo-error-id",
-        amount: examPrice,
-        payment_method: values.paymentMethod,
-        payment_status: "failed",
-        transaction_id: "demo-error-transaction",
       });
     } finally {
       setIsProcessing(false);
