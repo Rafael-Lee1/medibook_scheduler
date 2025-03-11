@@ -1,5 +1,5 @@
 
-import { Language } from "@/context/LanguageContext";
+import { Language } from "../context/LanguageContext";
 
 // Exchange rates (approximate)
 export const exchangeRates: Record<Language, number> = {
