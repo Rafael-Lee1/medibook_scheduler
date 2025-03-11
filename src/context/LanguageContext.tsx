@@ -28,7 +28,6 @@ const currencySymbols = {
   es: "€"     // EUR
 };
 
-// Create translations for each language
 const translations: Record<Language, Record<string, string>> = {
   en: {
     // Navigation
@@ -48,14 +47,6 @@ const translations: Record<Language, Record<string, string>> = {
     "home.search": "Search",
     "home.services": "Available Diagnostic Services",
     "home.viewAll": "View All Services",
-    
-    // Exam cards
-    "exam.mri.title": "MRI Scan",
-    "exam.mri.description": "High-resolution magnetic resonance imaging for detailed internal body examination.",
-    "exam.ct.title": "CT Scan",
-    "exam.ct.description": "Advanced computed tomography scanning for cross-sectional body imaging.",
-    "exam.xray.title": "X-Ray",
-    "exam.xray.description": "Quick and efficient diagnostic imaging for bones and chest examinations.",
     
     // Exam names and descriptions
     "exam.blood_test.name": "Blood Test",
@@ -149,14 +140,6 @@ const translations: Record<Language, Record<string, string>> = {
     "home.services": "Serviços de Diagnóstico Disponíveis",
     "home.viewAll": "Ver Todos os Serviços",
     
-    // Exam cards
-    "exam.mri.title": "Ressonância Magnética",
-    "exam.mri.description": "Imagem por ressonância magnética de alta resolução para exame detalhado interno do corpo.",
-    "exam.ct.title": "Tomografia Computadorizada",
-    "exam.ct.description": "Digitalização avançada de tomografia computarizada para imagens de seção transversal do corpo.",
-    "exam.xray.title": "Raio-X",
-    "exam.xray.description": "Imagens diagnósticas rápidas e eficientes para exames ósseos e torácicos.",
-    
     // Exam names and descriptions
     "exam.blood_test.name": "Exame de Sangue",
     "exam.blood_test.description": "Análise completa de sangue para avaliar a saúde geral e detectar anormalidades.",
@@ -248,14 +231,6 @@ const translations: Record<Language, Record<string, string>> = {
     "home.search": "Buscar",
     "home.services": "Servicios de Diagnóstico Disponibles",
     "home.viewAll": "Ver Todos los Servicios",
-    
-    // Exam cards
-    "exam.mri.title": "Resonancia Magnética",
-    "exam.mri.description": "Imágenes de resonancia magnética de alta resolución para un examen interno detallado del cuerpo.",
-    "exam.ct.title": "Tomografía Computarizada",
-    "exam.ct.description": "Escaneo avanzado de tomografía computarizada para imágenes transversales del cuerpo.",
-    "exam.xray.title": "Rayos X",
-    "exam.xray.description": "Imágenes diagnósticas rápidas y eficientes para exámenes de huesos y tórax.",
     
     // Exam names and descriptions
     "exam.blood_test.name": "Análisis de Sangre",
