@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 // Define the available languages
@@ -9,10 +8,25 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (language: Language) => void;
   t: (key: string) => string;
+  formatPrice: (price: number) => string;
 }
 
 // Create a default context
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+// Exchange rates (approximate)
+const exchangeRates = {
+  en: 1,      // USD (base)
+  pt: 5.5,    // BRL to USD
+  es: 0.85    // EUR to USD
+};
+
+// Currency symbols
+const currencySymbols = {
+  en: "$",    // USD
+  pt: "R$",   // BRL
+  es: "€"     // EUR
+};
 
 // Create translations for each language
 const translations: Record<Language, Record<string, string>> = {
@@ -42,6 +56,26 @@ const translations: Record<Language, Record<string, string>> = {
     "exam.ct.description": "Advanced computed tomography scanning for cross-sectional body imaging.",
     "exam.xray.title": "X-Ray",
     "exam.xray.description": "Quick and efficient diagnostic imaging for bones and chest examinations.",
+    
+    // Exam names and descriptions
+    "exam.blood_test.name": "Blood Test",
+    "exam.blood_test.description": "Comprehensive blood analysis to assess overall health and detect abnormalities.",
+    "exam.x_ray.name": "X-Ray",
+    "exam.x_ray.description": "Quick and efficient diagnostic imaging for bones and chest examinations.",
+    "exam.mri.name": "MRI Scan",
+    "exam.mri.description": "High-resolution magnetic resonance imaging for detailed internal body examination.",
+    "exam.ct_scan.name": "CT Scan",
+    "exam.ct_scan.description": "Advanced computed tomography scanning for cross-sectional body imaging.",
+    "exam.ultrasound.name": "Ultrasound",
+    "exam.ultrasound.description": "Non-invasive imaging technique using sound waves to visualize internal organs.",
+    "exam.endoscopy.name": "Endoscopy",
+    "exam.endoscopy.description": "Examination of internal organs using a flexible tube with a camera.",
+    "exam.colonoscopy.name": "Colonoscopy",
+    "exam.colonoscopy.description": "Examination of the colon and large intestine using a flexible tube with a camera.",
+    "exam.mammogram.name": "Mammogram",
+    "exam.mammogram.description": "X-ray imaging of the breast to detect early signs of breast cancer.",
+    "exam.other.name": "Other Exam",
+    "exam.other.description": "Specialized diagnostic procedure tailored to specific medical needs.",
     
     // Auth page
     "auth.createAccount": "Create an Account",
@@ -119,9 +153,29 @@ const translations: Record<Language, Record<string, string>> = {
     "exam.mri.title": "Ressonância Magnética",
     "exam.mri.description": "Imagem por ressonância magnética de alta resolução para exame detalhado interno do corpo.",
     "exam.ct.title": "Tomografia Computadorizada",
-    "exam.ct.description": "Digitalização avançada de tomografia computadorizada para imagens de seção transversal do corpo.",
+    "exam.ct.description": "Digitalização avançada de tomografia computarizada para imagens de seção transversal do corpo.",
     "exam.xray.title": "Raio-X",
     "exam.xray.description": "Imagens diagnósticas rápidas e eficientes para exames ósseos e torácicos.",
+    
+    // Exam names and descriptions
+    "exam.blood_test.name": "Exame de Sangue",
+    "exam.blood_test.description": "Análise completa de sangue para avaliar a saúde geral e detectar anormalidades.",
+    "exam.x_ray.name": "Raio-X",
+    "exam.x_ray.description": "Imagens diagnósticas rápidas e eficientes para exames ósseos e torácicos.",
+    "exam.mri.name": "Ressonância Magnética",
+    "exam.mri.description": "Imagem por ressonância magnética de alta resolução para exame detalhado interno do corpo.",
+    "exam.ct_scan.name": "Tomografia Computarizada",
+    "exam.ct_scan.description": "Digitalização avançada de tomografia computarizada para imagens de seção transversal do corpo.",
+    "exam.ultrasound.name": "Ultrassom",
+    "exam.ultrasound.description": "Técnica de imagem não invasiva usando ondas sonoras para visualizar órgãos internos.",
+    "exam.endoscopy.name": "Endoscopia",
+    "exam.endoscopy.description": "Exame de órgãos internos usando um tubo flexível com uma câmera.",
+    "exam.colonoscopy.name": "Colonoscopia",
+    "exam.colonoscopy.description": "Exame do cólon e intestino grosso usando um tubo flexível com uma câmera.",
+    "exam.mammogram.name": "Mamografia",
+    "exam.mammogram.description": "Imagem de raios-X da mama para detectar sinais precoces de câncer de mama.",
+    "exam.other.name": "Outro Exame",
+    "exam.other.description": "Procedimento diagnóstico especializado adaptado a necessidades médicas específicas.",
     
     // Auth page
     "auth.createAccount": "Criar uma Conta",
@@ -152,7 +206,7 @@ const translations: Record<Language, Record<string, string>> = {
     "examType.blood_test": "Exame de Sangue",
     "examType.x_ray": "Raio-X",
     "examType.mri": "Ressonância Magnética",
-    "examType.ct_scan": "Tomografia Computadorizada",
+    "examType.ct_scan": "Tomografia Computarizada",
     "examType.ultrasound": "Ultrassom",
     "examType.endoscopy": "Endoscopia",
     "examType.colonoscopy": "Colonoscopia",
@@ -202,6 +256,26 @@ const translations: Record<Language, Record<string, string>> = {
     "exam.ct.description": "Escaneo avanzado de tomografía computarizada para imágenes transversales del cuerpo.",
     "exam.xray.title": "Rayos X",
     "exam.xray.description": "Imágenes diagnósticas rápidas y eficientes para exámenes de huesos y tórax.",
+    
+    // Exam names and descriptions
+    "exam.blood_test.name": "Análisis de Sangre",
+    "exam.blood_test.description": "Análisis completo de sangre para evaluar la salud general y detectar anomalías.",
+    "exam.x_ray.name": "Rayos X",
+    "exam.x_ray.description": "Imágenes diagnósticas rápidas y eficientes para exámenes de huesos y tórax.",
+    "exam.mri.name": "Resonancia Magnética",
+    "exam.mri.description": "Imágenes de resonancia magnética de alta resolución para un examen interno detallado del cuerpo.",
+    "exam.ct_scan.name": "Tomografía Computarizada",
+    "exam.ct_scan.description": "Escaneo avanzado de tomografía computarizada para imágenes transversales del cuerpo.",
+    "exam.ultrasound.name": "Ultrasonido",
+    "exam.ultrasound.description": "Técnica de imagen no invasiva que utiliza ondas sonoras para visualizar órganos internos.",
+    "exam.endoscopy.name": "Endoscopia",
+    "exam.endoscopy.description": "Examen de órganos internos utilizando un tubo flexible con una cámara.",
+    "exam.colonoscopy.name": "Colonoscopia",
+    "exam.colonoscopy.description": "Examen del colon y del intestino grueso utilizando un tubo flexible con una cámara.",
+    "exam.mammogram.name": "Mamografía",
+    "exam.mammogram.description": "Imágenes de rayos X del seno para detectar signos tempranos de cáncer de mama.",
+    "exam.other.name": "Otro Examen",
+    "exam.other.description": "Procedimiento diagnóstico especializado adaptado a necesidades médicas específicas.",
     
     // Auth page
     "auth.createAccount": "Crear una Cuenta",
@@ -285,6 +359,15 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
     return translations[language][key] || key;
   };
 
+  // Format price according to current language
+  const formatPrice = (price: number): string => {
+    const rate = exchangeRates[language];
+    const symbol = currencySymbols[language];
+    
+    const convertedPrice = price * rate;
+    return `${symbol}${convertedPrice.toFixed(2)}`;
+  };
+
   // Update language and save to localStorage
   const setLanguage = (newLanguage: Language) => {
     setLanguageState(newLanguage);
@@ -300,6 +383,7 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
     language,
     setLanguage,
     t,
+    formatPrice,
   };
 
   return (
