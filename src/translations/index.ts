@@ -1,5 +1,6 @@
 
-import { Language } from "@/context/LanguageContext";
+// Using relative path instead of alias
+import type { Language } from "../context/LanguageContext";
 import enTranslations from "./en";
 import ptTranslations from "./pt";
 import esTranslations from "./es";
