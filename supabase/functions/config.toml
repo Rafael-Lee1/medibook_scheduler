@@ -1,6 +1,6 @@
 
 [functions.send-appointment-email]
-verify_jwt = true
+verify_jwt = false
 
 [functions.process-payment]
 verify_jwt = true

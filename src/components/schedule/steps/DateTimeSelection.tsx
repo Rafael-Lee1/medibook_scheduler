@@ -61,29 +61,22 @@ export const DateTimeSelection = ({
 
       if (appointmentError) throw appointmentError;
 
-      // Send confirmation email
+      // Send confirmation email using authenticated function call
       try {
-        const emailResponse = await fetch(
-          "https://dxnzcvjyqghisjmmmiwl.supabase.co/functions/v1/send-appointment-email",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userEmail: user.email,
-              userName: user.user_metadata?.full_name || "Patient",
-              examName: examDetails.exams.name,
-              laboratoryName: examDetails.laboratories.name,
-              appointmentDate: format(selectedDate, "PPP"),
-              appointmentTime: selectedTime,
-              notificationType: "confirmation",
-            }),
-          }
-        );
+        const { error: emailError } = await supabase.functions.invoke("send-appointment-email", {
+          body: {
+            userEmail: user.email,
+            userName: user.user_metadata?.full_name || "Patient",
+            examName: examDetails.exams.name,
+            laboratoryName: examDetails.laboratories.name,
+            appointmentDate: format(selectedDate, "PPP"),
+            appointmentTime: selectedTime,
+            notificationType: "confirmation",
+          },
+        });
 
-        if (!emailResponse.ok) {
-          console.error("Failed to send confirmation email");
+        if (emailError) {
+          console.error("Failed to send confirmation email:", emailError);
         }
       } catch (emailError) {
         console.error("Error sending confirmation email:", emailError);
