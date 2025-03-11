@@ -64,6 +64,8 @@ const translations: Record<Language, Record<string, string>> = {
     "search.city": "City",
     "search.allCities": "All Cities",
     "search.scheduleExam": "Schedule Exam",
+    "search.noResults": "No exams found. Please try a different search.",
+    "search.noResultsWithFilters": "No exams found matching your search criteria. Try adjusting your filters.",
     
     // Exam types
     "examType.all_types": "All Types",
@@ -142,6 +144,8 @@ const translations: Record<Language, Record<string, string>> = {
     "search.city": "Cidade",
     "search.allCities": "Todas as Cidades",
     "search.scheduleExam": "Agendar Exame",
+    "search.noResults": "Nenhum exame encontrado. Tente uma busca diferente.",
+    "search.noResultsWithFilters": "Nenhum exame encontrado com seus critérios de busca. Tente ajustar seus filtros.",
     
     // Exam types
     "examType.all_types": "Todos os Tipos",
@@ -220,6 +224,8 @@ const translations: Record<Language, Record<string, string>> = {
     "search.city": "Ciudad",
     "search.allCities": "Todas las Ciudades",
     "search.scheduleExam": "Programar Examen",
+    "search.noResults": "No se encontraron exámenes. Intente una búsqueda diferente.",
+    "search.noResultsWithFilters": "No se encontraron exámenes que coincidan con sus criterios de búsqueda. Intente ajustar sus filtros.",
     
     // Exam types
     "examType.all_types": "Todos los Tipos",

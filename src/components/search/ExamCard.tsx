@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useLanguage } from "@/context/LanguageContext";
 import type { ExamResult } from "@/types/exam";
 
 interface ExamCardProps {
@@ -10,6 +11,7 @@ interface ExamCardProps {
 
 const ExamCard = ({ exam }: ExamCardProps) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <Card key={`${exam.exam_id}-${exam.laboratory_id}`} className="p-4">
@@ -31,7 +33,7 @@ const ExamCard = ({ exam }: ExamCardProps) => {
           navigate(`/schedule?exam=${exam.exam_id}&laboratory=${exam.laboratory_id}`)
         }
       >
-        Schedule Exam
+        {t("search.scheduleExam")}
       </Button>
     </Card>
   );

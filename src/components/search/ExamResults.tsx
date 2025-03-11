@@ -1,5 +1,6 @@
 
 import ExamCard from "./ExamCard";
+import { useLanguage } from "@/context/LanguageContext";
 import type { ExamResult } from "@/types/exam";
 
 interface ExamResultsProps {
@@ -9,16 +10,18 @@ interface ExamResultsProps {
 }
 
 const ExamResults = ({ isLoading, examResults, hasFilters }: ExamResultsProps) => {
+  const { t } = useLanguage();
+  
   if (isLoading) {
-    return <p>Loading exams...</p>;
+    return <p>{t("myExams.loading")}</p>;
   }
 
   if (examResults.length === 0) {
     return (
       <p className="text-center text-muted-foreground">
         {hasFilters 
-          ? "No exams found matching your search criteria. Try adjusting your filters."
-          : "No exams found. Please try a different search."}
+          ? t("search.noResultsWithFilters") 
+          : t("search.noResults")}
       </p>
     );
   }
