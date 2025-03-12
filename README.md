@@ -4,7 +4,7 @@
   <img width="460" height="300" src="https://github.com/Rafael-Lee1/Icons/blob/13b3c2ea9897479a5abe2038269e26d99fd22597/medibook_typescript.png">
 </p>
 
-*Você pode acessar o projeto clicando <a href="https://medibook-scheduler.lovable.app/">aqui</a>.</p>
+*Você pode acessar o projeto clicando <a href="https://www.medibook.website/">aqui</a>.</p>
 
 ## Informações do Projeto
 
